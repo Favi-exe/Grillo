@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: #fbf1e6;
+  color: #3a2a2e;
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background-color: #f5b76c;
+  color: #3a2a2e;
+}
+
+/* Scrollbar cálido, discreto (progressive enhancement, no afecta funcionalidad) */
+* {
+  scrollbar-color: #d9c4ac #fbf1e6;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #d9c4ac;
+  border-radius: 999px;
+}
+
+/* Utilidad para escalonar animaciones de entrada sin JS */
+.stagger-1 { animation-delay: 80ms; }
+.stagger-2 { animation-delay: 160ms; }
+.stagger-3 { animation-delay: 240ms; }
+.stagger-4 { animation-delay: 320ms; }
+
+/* Respeta la preferencia del sistema: colapsa toda animación/transición.
+   Es la forma más robusta de cumplir prefers-reduced-motion — no depende
+   de que cada componente lo maneje por separado. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

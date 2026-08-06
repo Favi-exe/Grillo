@@ -1,0 +1,27 @@
+# deps
+node_modules/
+
+# next
+.next/
+out/
+build/
+
+# env
+.env
+.env.local
+.env*.local
+
+# data (mock local db + mock vector store)
+/data/*.json
+
+# claude code local settings (config de la máquina/sesión, no del proyecto)
+.claude/settings.local.json
+
+# misc
+.DS_Store
+*.log
+npm-debug.log*
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
