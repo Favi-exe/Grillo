@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { registrarFamiliar, isSupabaseAuthConfigured } from "@/lib/auth/familiarSession";
 import { CricketMark, CheckIcon } from "@/components/icons";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function RegistroPage() {
   const [email, setEmail] = useState("");
@@ -76,21 +77,17 @@ export default function RegistroPage() {
               onChange={(e) => setEmail(e.target.value)}
               className={inputCls}
             />
-            <input
-              type="password"
+            <PasswordInput
               required
               placeholder="Contraseña (mínimo 6 caracteres)"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={inputCls}
+              onChange={setPassword}
             />
-            <input
-              type="password"
+            <PasswordInput
               required
               placeholder="Repetir contraseña"
               value={confirmar}
-              onChange={(e) => setConfirmar(e.target.value)}
-              className={inputCls}
+              onChange={setConfirmar}
             />
             {error && <p className="text-clay-600">{error}</p>}
             <button

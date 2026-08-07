@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { actualizarContrasena, suscribirseACambiosDeSesion } from "@/lib/auth/familiarSession";
 import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
 import { CricketMark } from "@/components/icons";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function RestablecerContrasenaPage() {
   const router = useRouter();
@@ -48,9 +49,6 @@ export default function RestablecerContrasenaPage() {
     }
   }
 
-  const inputCls =
-    "min-h-[52px] w-full border-2 border-sand-400 rounded-2xl px-4 text-lg bg-white focus:outline-none focus:ring-4 focus:ring-ember-200 focus:border-ember-400";
-
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 gap-6 bg-sand-200">
       <div className="w-16 h-16 rounded-3xl bg-white shadow-warm-sm flex items-center justify-center">
@@ -65,21 +63,17 @@ export default function RestablecerContrasenaPage() {
             <h1 className="font-heading text-2xl font-semibold text-sand-900 mb-1">
               Elige una nueva contraseña
             </h1>
-            <input
-              type="password"
+            <PasswordInput
               required
               placeholder="Contraseña nueva"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={inputCls}
+              onChange={setPassword}
             />
-            <input
-              type="password"
+            <PasswordInput
               required
               placeholder="Repetir contraseña"
               value={confirmar}
-              onChange={(e) => setConfirmar(e.target.value)}
-              className={inputCls}
+              onChange={setConfirmar}
             />
             {error && <p className="text-clay-600">{error}</p>}
             <button

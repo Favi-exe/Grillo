@@ -7,6 +7,7 @@ import { iniciarSesionFamiliar, isSupabaseAuthConfigured, haySesionActiva } from
 import { obtenerTokenDispositivo } from "@/lib/auth/deviceToken";
 import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
 import { CricketMark } from "@/components/icons";
+import { PasswordInput } from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mostrarLoginMayor, setMostrarLoginMayor] = useState(false);
   // Dispositivo vinculado por un familiar, O sesión propia (persona mayor
   // que se registró sola en /registro-mayor) — cualquiera de las dos alcanza.
   const [accesoListo, setAccesoListo] = useState<boolean | null>(null);
@@ -94,13 +96,11 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 className={inputCls}
               />
-              <input
-                type="password"
+              <PasswordInput
                 required
                 placeholder="Contraseña"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={inputCls}
+                onChange={setPassword}
               />
               {error && <p className="text-clay-600">{error}</p>}
               <button
@@ -138,20 +138,64 @@ export default function LoginPage() {
             </>
           ) : (
             <div className="flex flex-col gap-5">
-              <div>
-                <p className="text-sand-900 text-xl font-semibold mb-1">
-                  ¿Te gustaría la compañía y ayuda de Grillo?
-                </p>
-                <p className="text-sand-700 mb-4">
-                  Crea tu cuenta en unos pasos sencillos — yo mismo te voy guiando.
-                </p>
-                <Link
-                  href="/registro-mayor"
-                  className="inline-flex items-center justify-center min-h-[52px] w-full bg-ember-600 hover:bg-ember-700 text-white text-lg rounded-2xl font-semibold transition-colors"
-                >
-                  Crear mi cuenta
-                </Link>
-              </div>
+              {!mostrarLoginMayor ? (
+                <div>
+                  <p className="text-sand-900 text-xl font-semibold mb-1">
+                    ¿Te gustaría la compañía y ayuda de Grillo?
+                  </p>
+                  <p className="text-sand-700 mb-4">
+                    Crea tu cuenta en unos pasos sencillos — yo mismo te voy guiando.
+                  </p>
+                  <Link
+                    href="/registro-mayor"
+                    className="inline-flex items-center justify-center min-h-[52px] w-full bg-ember-600 hover:bg-ember-700 text-white text-lg rounded-2xl font-semibold transition-colors"
+                  >
+                    Crear mi cuenta
+                  </Link>
+                  <button
+                    onClick={() => setMostrarLoginMayor(true)}
+                    className="mt-3 text-dusk-700 font-semibold underline"
+                  >
+                    Ya tengo una cuenta, iniciar sesión
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <h1 className="font-heading text-2xl font-semibold text-sand-900 mb-3">
+                    Ingresar
+                  </h1>
+                  <form onSubmit={handleLogin} className="flex flex-col gap-3 text-left">
+                    <input
+                      type="email"
+                      required
+                      placeholder="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className={inputCls}
+                    />
+                    <PasswordInput
+                      required
+                      placeholder="Contraseña"
+                      value={password}
+                      onChange={setPassword}
+                    />
+                    {error && <p className="text-clay-600">{error}</p>}
+                    <button
+                      type="submit"
+                      disabled={cargando}
+                      className="min-h-[52px] bg-dusk-700 hover:bg-dusk-800 text-white rounded-2xl font-semibold disabled:opacity-60 transition-colors"
+                    >
+                      {cargando ? "Ingresando..." : "Ingresar"}
+                    </button>
+                  </form>
+                  <button
+                    onClick={() => setMostrarLoginMayor(false)}
+                    className="mt-3 text-sand-500 text-sm underline"
+                  >
+                    Todavía no tengo cuenta, quiero crear una
+                  </button>
+                </div>
+              )}
               <div className="border-t border-sand-200 pt-4">
                 <p className="text-sand-600 text-sm">
                   Si un familiar ya te configuró este dispositivo, pídele que toque{" "}
