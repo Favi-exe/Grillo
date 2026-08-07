@@ -213,11 +213,6 @@ export default function LoginPage() {
           )}
         </div>
       )}
-
-      <p className="text-base text-sand-700 mt-2 max-w-sm text-center opacity-0 animate-fade-rise stagger-3">
-        El familiar inicia sesión normalmente. La persona mayor nunca ve una pantalla de login —
-        su dispositivo queda configurado una sola vez.
-      </p>
     </main>
   );
 }
