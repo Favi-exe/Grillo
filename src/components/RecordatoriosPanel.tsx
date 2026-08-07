@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
+import { fetchAbuelo } from "@/lib/auth/fetchConAuth";
 import type { Recordatorio } from "@/lib/types";
 import { TipoRecordatorioIcon, TIPO_INFO } from "@/components/TipoRecordatorioIcon";
 import { BellIcon, CheckIcon } from "@/components/icons";
@@ -23,13 +24,13 @@ const RecordatorioItem = memo(function RecordatorioItem({ r }: { r: Recordatorio
   );
 });
 
-export default function RecordatoriosPanel({ abueloId }: { abueloId: string }) {
+export default function RecordatoriosPanel() {
   const [recordatorios, setRecordatorios] = useState<Recordatorio[]>([]);
   const [aviso, setAviso] = useState<Recordatorio | null>(null);
 
   async function cargar() {
     try {
-      const res = await fetch(`/api/recordatorios?abueloId=${abueloId}`);
+      const res = await fetchAbuelo("/api/recordatorios");
       const data = await res.json();
       setRecordatorios((data.recordatorios ?? []).filter((r: Recordatorio) => r.activo));
     } catch (err) {
@@ -41,8 +42,7 @@ export default function RecordatoriosPanel({ abueloId }: { abueloId: string }) {
     cargar();
     const interval = setInterval(cargar, 15000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [abueloId]);
+  }, []);
 
   // Revisa cada 20s si algún recordatorio coincide con la hora actual.
   useEffect(() => {

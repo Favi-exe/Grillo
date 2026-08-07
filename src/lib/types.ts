@@ -6,6 +6,7 @@ export interface Usuario {
   rol: Rol;
   relacion_con_abuelo?: string | null;
   abuelo_id?: string | null;
+  auth_user_id?: string | null;
   created_at: string;
 }
 
@@ -71,4 +72,14 @@ export interface AlertaEmergencia {
   estado: "activa" | "resuelta";
   fecha: string;
   fecha_resuelta?: string | null;
+}
+
+export interface AbueloDispositivo {
+  id: string;
+  abuelo_id: string;
+  token: string;
+  nombre_dispositivo?: string | null;
+  creado_por?: string | null;
+  created_at: string;
+  ultimo_acceso?: string | null;
 }

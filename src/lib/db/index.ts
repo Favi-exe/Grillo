@@ -8,6 +8,7 @@ import type {
   Memoria,
   Conversacion,
   AlertaEmergencia,
+  AbueloDispositivo,
 } from "@/lib/types";
 
 /**
@@ -26,12 +27,31 @@ export async function listUsuarios(): Promise<Usuario[]> {
 export async function getUsuario(id: string): Promise<Usuario | undefined> {
   return usandoSupabase() ? supabaseStore.getUsuario(id) : localStore.getUsuario(id);
 }
+export async function getUsuarioByAuthId(authUserId: string): Promise<Usuario | undefined> {
+  return usandoSupabase()
+    ? supabaseStore.getUsuarioByAuthId(authUserId)
+    : localStore.getUsuarioByAuthId(authUserId);
+}
+export async function createUsuario(input: Omit<Usuario, "id" | "created_at">): Promise<Usuario> {
+  return usandoSupabase() ? supabaseStore.createUsuario(input) : localStore.createUsuario(input);
+}
+export async function updateUsuario(
+  id: string,
+  patch: Partial<Usuario>
+): Promise<Usuario | undefined> {
+  return usandoSupabase()
+    ? supabaseStore.updateUsuario(id, patch)
+    : localStore.updateUsuario(id, patch);
+}
 
 export async function listAbuelos(): Promise<Abuelo[]> {
   return usandoSupabase() ? supabaseStore.listAbuelos() : localStore.listAbuelos();
 }
 export async function getAbuelo(id: string): Promise<Abuelo | undefined> {
   return usandoSupabase() ? supabaseStore.getAbuelo(id) : localStore.getAbuelo(id);
+}
+export async function createAbuelo(input: Omit<Abuelo, "id" | "created_at">): Promise<Abuelo> {
+  return usandoSupabase() ? supabaseStore.createAbuelo(input) : localStore.createAbuelo(input);
 }
 
 export async function listRecordatorios(abueloId: string): Promise<Recordatorio[]> {
@@ -94,4 +114,25 @@ export async function resolverAlertaEmergencia(id: string): Promise<AlertaEmerge
   return usandoSupabase()
     ? supabaseStore.resolverAlertaEmergencia(id)
     : localStore.resolverAlertaEmergencia(id);
+}
+
+export async function crearDispositivo(input: {
+  abueloId: string;
+  nombreDispositivo?: string | null;
+  creadoPor?: string | null;
+}): Promise<AbueloDispositivo> {
+  return usandoSupabase() ? supabaseStore.crearDispositivo(input) : localStore.crearDispositivo(input);
+}
+export async function getAbueloIdPorToken(token: string): Promise<string | undefined> {
+  return usandoSupabase()
+    ? supabaseStore.getAbueloIdPorToken(token)
+    : localStore.getAbueloIdPorToken(token);
+}
+export async function listDispositivos(abueloId: string): Promise<AbueloDispositivo[]> {
+  return usandoSupabase()
+    ? supabaseStore.listDispositivos(abueloId)
+    : localStore.listDispositivos(abueloId);
+}
+export async function eliminarDispositivo(id: string): Promise<boolean> {
+  return usandoSupabase() ? supabaseStore.eliminarDispositivo(id) : localStore.eliminarDispositivo(id);
 }

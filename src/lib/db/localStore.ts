@@ -8,6 +8,7 @@ import type {
   Memoria,
   Conversacion,
   AlertaEmergencia,
+  AbueloDispositivo,
 } from "@/lib/types";
 
 interface DbShape {
@@ -17,75 +18,24 @@ interface DbShape {
   memorias: Memoria[];
   conversaciones: Conversacion[];
   alertas_emergencia: AlertaEmergencia[];
+  abuelo_dispositivos: AbueloDispositivo[];
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const DB_FILE = path.join(DATA_DIR, "db.json");
 
-function seed(): DbShape {
-  const abueloId = "abuelo-demo-1";
-  const familiarId = "familiar-demo-1";
-  const now = new Date().toISOString();
-
+// Sin datos de ejemplo: el modo local arranca vacío, igual que Supabase.
+// Nota: el login real (email+contraseña) necesita Supabase Auth — en modo
+// local solo sirve para probar el resto de los flujos con datos propios.
+function vacio(): DbShape {
   return {
-    usuarios: [
-      {
-        id: "abuelo-user-1",
-        nombre: "Don Carlos",
-        rol: "abuelo",
-        relacion_con_abuelo: null,
-        abuelo_id: abueloId,
-        created_at: now,
-      },
-      {
-        id: familiarId,
-        nombre: "Ana",
-        rol: "familiar",
-        relacion_con_abuelo: "hija",
-        abuelo_id: abueloId,
-        created_at: now,
-      },
-    ],
-    abuelos: [
-      {
-        id: abueloId,
-        nombre: "Carlos",
-        fecha_nacimiento: "1948-03-12",
-        notas_generales: "Le gusta el mate, el fútbol y contar historias de su pueblo natal.",
-        created_at: now,
-      },
-    ],
-    recordatorios: [
-      {
-        id: randomUUID(),
-        abuelo_id: abueloId,
-        tipo: "medicamento",
-        descripcion: "Tomar la pastilla de la presión",
-        hora: "09:00",
-        frecuencia: "diario",
-        creado_por: familiarId,
-        activo: true,
-        created_at: now,
-        ultima_notificacion: null,
-      },
-    ],
-    memorias: [
-      {
-        id: randomUUID(),
-        abuelo_id: abueloId,
-        resumen:
-          "Carlos contó cómo conoció a su esposa Marta en un baile del club del pueblo en 1968, y que le costó tres meses invitarla a bailar por lo tímido que era.",
-        transcripcion_original:
-          "Yo a Marta la conocí en un baile del club... yo era muy tímido, ¿sabes? Tardé como tres meses en animarme a sacarla a bailar. Al final fue ella la que me sacó a mí.",
-        tema: "familia",
-        personas_mencionadas: ["Marta"],
-        emocion_detectada: "nostalgia",
-        fecha: now,
-        embedding_id_pinecone: null,
-      },
-    ],
+    usuarios: [],
+    abuelos: [],
+    recordatorios: [],
+    memorias: [],
     conversaciones: [],
     alertas_emergencia: [],
+    abuelo_dispositivos: [],
   };
 }
 
@@ -94,18 +44,19 @@ function ensureDb(): DbShape {
     fs.mkdirSync(DATA_DIR, { recursive: true });
   }
   if (!fs.existsSync(DB_FILE)) {
-    const initial = seed();
+    const initial = vacio();
     fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), "utf-8");
     return initial;
   }
   try {
     const raw = fs.readFileSync(DB_FILE, "utf-8");
     const parsed = JSON.parse(raw) as Partial<DbShape>;
-    // Compatibilidad con db.json generados antes de sumar alertas_emergencia.
+    // Compatibilidad con db.json generados antes de sumar estas colecciones.
     if (!parsed.alertas_emergencia) parsed.alertas_emergencia = [];
+    if (!parsed.abuelo_dispositivos) parsed.abuelo_dispositivos = [];
     return parsed as DbShape;
   } catch {
-    const initial = seed();
+    const initial = vacio();
     fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), "utf-8");
     return initial;
   }
@@ -123,6 +74,24 @@ export const localStore = {
   getUsuario(id: string): Usuario | undefined {
     return ensureDb().usuarios.find((u) => u.id === id);
   },
+  getUsuarioByAuthId(authUserId: string): Usuario | undefined {
+    return ensureDb().usuarios.find((u) => u.auth_user_id === authUserId);
+  },
+  createUsuario(input: Omit<Usuario, "id" | "created_at">): Usuario {
+    const db = ensureDb();
+    const nuevo: Usuario = { ...input, id: randomUUID(), created_at: new Date().toISOString() };
+    db.usuarios.push(nuevo);
+    save(db);
+    return nuevo;
+  },
+  updateUsuario(id: string, patch: Partial<Usuario>): Usuario | undefined {
+    const db = ensureDb();
+    const idx = db.usuarios.findIndex((u) => u.id === id);
+    if (idx === -1) return undefined;
+    db.usuarios[idx] = { ...db.usuarios[idx], ...patch };
+    save(db);
+    return db.usuarios[idx];
+  },
 
   // --- Abuelos ---
   listAbuelos(): Abuelo[] {
@@ -130,6 +99,13 @@ export const localStore = {
   },
   getAbuelo(id: string): Abuelo | undefined {
     return ensureDb().abuelos.find((a) => a.id === id);
+  },
+  createAbuelo(input: Omit<Abuelo, "id" | "created_at">): Abuelo {
+    const db = ensureDb();
+    const nuevo: Abuelo = { ...input, id: randomUUID(), created_at: new Date().toISOString() };
+    db.abuelos.push(nuevo);
+    save(db);
+    return nuevo;
   },
 
   // --- Recordatorios ---
@@ -221,5 +197,47 @@ export const localStore = {
     };
     save(db);
     return db.alertas_emergencia[idx];
+  },
+
+  // --- Dispositivos del abuelo (login persistente sin contraseña) ---
+  crearDispositivo(input: {
+    abueloId: string;
+    nombreDispositivo?: string | null;
+    creadoPor?: string | null;
+  }): AbueloDispositivo {
+    const db = ensureDb();
+    const nuevo: AbueloDispositivo = {
+      id: randomUUID(),
+      abuelo_id: input.abueloId,
+      token: randomUUID() + randomUUID(), // token largo, no adivinable
+      nombre_dispositivo: input.nombreDispositivo ?? null,
+      creado_por: input.creadoPor ?? null,
+      created_at: new Date().toISOString(),
+      ultimo_acceso: null,
+    };
+    db.abuelo_dispositivos.push(nuevo);
+    save(db);
+    return nuevo;
+  },
+  getAbueloIdPorToken(token: string): string | undefined {
+    const db = ensureDb();
+    const idx = db.abuelo_dispositivos.findIndex((d) => d.token === token);
+    if (idx === -1) return undefined;
+    db.abuelo_dispositivos[idx] = {
+      ...db.abuelo_dispositivos[idx],
+      ultimo_acceso: new Date().toISOString(),
+    };
+    save(db);
+    return db.abuelo_dispositivos[idx].abuelo_id;
+  },
+  listDispositivos(abueloId: string): AbueloDispositivo[] {
+    return ensureDb().abuelo_dispositivos.filter((d) => d.abuelo_id === abueloId);
+  },
+  eliminarDispositivo(id: string): boolean {
+    const db = ensureDb();
+    const before = db.abuelo_dispositivos.length;
+    db.abuelo_dispositivos = db.abuelo_dispositivos.filter((d) => d.id !== id);
+    save(db);
+    return db.abuelo_dispositivos.length < before;
   },
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useMemo, useState } from "react";
+import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
 import type { Memoria } from "@/lib/types";
 import { HeartIcon, PeopleIcon } from "@/components/icons";
 
@@ -48,18 +49,18 @@ const MemoriaCard = memo(function MemoriaCard({ m }: { m: Memoria }) {
   );
 });
 
-export default function MemoriasList({ abueloId }: { abueloId: string }) {
+export default function MemoriasList() {
   const [memorias, setMemorias] = useState<Memoria[]>([]);
   const [filtroTema, setFiltroTema] = useState<string>("todos");
   const [cargando, setCargando] = useState(true);
   const [visibles, setVisibles] = useState(PAGINA);
 
   useEffect(() => {
-    fetch(`/api/memorias?abueloId=${abueloId}`)
+    fetchFamiliar("/api/memorias")
       .then((res) => res.json())
       .then((data) => setMemorias(data.memorias ?? []))
       .finally(() => setCargando(false));
-  }, [abueloId]);
+  }, []);
 
   const temas = useMemo(() => {
     const set = new Set(memorias.map((m) => m.tema).filter(Boolean));

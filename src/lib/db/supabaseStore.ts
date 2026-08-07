@@ -7,6 +7,7 @@ import type {
   Memoria,
   Conversacion,
   AlertaEmergencia,
+  AbueloDispositivo,
 } from "@/lib/types";
 
 export const supabaseStore = {
@@ -20,6 +21,35 @@ export const supabaseStore = {
       .from("usuarios")
       .select("*")
       .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return (data as Usuario) ?? undefined;
+  },
+  async getUsuarioByAuthId(authUserId: string): Promise<Usuario | undefined> {
+    const { data, error } = await getSupabaseClient()
+      .from("usuarios")
+      .select("*")
+      .eq("auth_user_id", authUserId)
+      .maybeSingle();
+    if (error) throw error;
+    return (data as Usuario) ?? undefined;
+  },
+  async createUsuario(input: Omit<Usuario, "id" | "created_at">): Promise<Usuario> {
+    const nuevo = { ...input, id: randomUUID(), created_at: new Date().toISOString() };
+    const { data, error } = await getSupabaseClient()
+      .from("usuarios")
+      .insert(nuevo)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Usuario;
+  },
+  async updateUsuario(id: string, patch: Partial<Usuario>): Promise<Usuario | undefined> {
+    const { data, error } = await getSupabaseClient()
+      .from("usuarios")
+      .update(patch)
+      .eq("id", id)
+      .select()
       .maybeSingle();
     if (error) throw error;
     return (data as Usuario) ?? undefined;
@@ -38,6 +68,16 @@ export const supabaseStore = {
       .maybeSingle();
     if (error) throw error;
     return (data as Abuelo) ?? undefined;
+  },
+  async createAbuelo(input: Omit<Abuelo, "id" | "created_at">): Promise<Abuelo> {
+    const nuevo = { ...input, id: randomUUID(), created_at: new Date().toISOString() };
+    const { data, error } = await getSupabaseClient()
+      .from("abuelos")
+      .insert(nuevo)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Abuelo;
   },
 
   async listRecordatorios(abueloId: string): Promise<Recordatorio[]> {
@@ -153,5 +193,56 @@ export const supabaseStore = {
       .maybeSingle();
     if (error) throw error;
     return (data as AlertaEmergencia) ?? undefined;
+  },
+
+  async crearDispositivo(input: {
+    abueloId: string;
+    nombreDispositivo?: string | null;
+    creadoPor?: string | null;
+  }): Promise<AbueloDispositivo> {
+    const nuevo = {
+      id: randomUUID(),
+      abuelo_id: input.abueloId,
+      token: randomUUID() + randomUUID(),
+      nombre_dispositivo: input.nombreDispositivo ?? null,
+      creado_por: input.creadoPor ?? null,
+      created_at: new Date().toISOString(),
+      ultimo_acceso: null,
+    };
+    const { data, error } = await getSupabaseClient()
+      .from("abuelo_dispositivos")
+      .insert(nuevo)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as AbueloDispositivo;
+  },
+  async getAbueloIdPorToken(token: string): Promise<string | undefined> {
+    const client = getSupabaseClient();
+    const { data, error } = await client
+      .from("abuelo_dispositivos")
+      .select("id, abuelo_id")
+      .eq("token", token)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) return undefined;
+    await client
+      .from("abuelo_dispositivos")
+      .update({ ultimo_acceso: new Date().toISOString() })
+      .eq("id", data.id);
+    return data.abuelo_id as string;
+  },
+  async listDispositivos(abueloId: string): Promise<AbueloDispositivo[]> {
+    const { data, error } = await getSupabaseClient()
+      .from("abuelo_dispositivos")
+      .select("*")
+      .eq("abuelo_id", abueloId);
+    if (error) throw error;
+    return data as AbueloDispositivo[];
+  },
+  async eliminarDispositivo(id: string): Promise<boolean> {
+    const { error } = await getSupabaseClient().from("abuelo_dispositivos").delete().eq("id", id);
+    if (error) throw error;
+    return true;
   },
 };

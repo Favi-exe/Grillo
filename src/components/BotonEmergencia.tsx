@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { fetchAbuelo } from "@/lib/auth/fetchConAuth";
 import { AlertIcon, CheckIcon } from "@/components/icons";
 
 type Estado = "idle" | "confirmando" | "enviada";
@@ -13,7 +14,7 @@ const SEGUNDOS_CONFIRMACION = 3;
  * dispara una ventana corta de confirmación cancelable — protege contra
  * toques accidentales sin agregar fricción real en una emergencia genuina.
  */
-export default function BotonEmergencia({ abueloId }: { abueloId: string }) {
+export default function BotonEmergencia() {
   const [estado, setEstado] = useState<Estado>("idle");
   const [segundosRestantes, setSegundosRestantes] = useState(SEGUNDOS_CONFIRMACION);
   const [alertaActiva, setAlertaActiva] = useState(false);
@@ -21,7 +22,7 @@ export default function BotonEmergencia({ abueloId }: { abueloId: string }) {
   const alertaEnviadaRef = useRef(false);
 
   useEffect(() => {
-    fetch(`/api/emergencia?abueloId=${abueloId}`)
+    fetchAbuelo("/api/emergencia")
       .then((res) => res.json())
       .then((data) => {
         const activa = (data.alertas ?? []).some(
@@ -30,7 +31,7 @@ export default function BotonEmergencia({ abueloId }: { abueloId: string }) {
         setAlertaActiva(activa);
       })
       .catch((err) => console.error("[BotonEmergencia]", err));
-  }, [abueloId]);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -48,11 +49,7 @@ export default function BotonEmergencia({ abueloId }: { abueloId: string }) {
     setEstado("enviada");
     setAlertaActiva(true);
     try {
-      await fetch("/api/emergencia", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ abueloId }),
-      });
+      await fetchAbuelo("/api/emergencia", { method: "POST" });
     } catch (err) {
       console.error("[BotonEmergencia]", err);
     }

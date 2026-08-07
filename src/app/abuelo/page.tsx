@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { obtenerSesion, cerrarSesion, type Sesion } from "@/lib/session";
+import { fetchAbuelo } from "@/lib/auth/fetchConAuth";
+import { borrarTokenDispositivo } from "@/lib/auth/deviceToken";
+import { cerrarSesionFamiliar } from "@/lib/auth/familiarSession";
 import VoiceChat from "@/components/VoiceChat";
 import RecordatoriosPanel from "@/components/RecordatoriosPanel";
 import BotonEmergencia from "@/components/BotonEmergencia";
-import { LogOutIcon } from "@/components/icons";
+import InvitarFamiliar from "@/components/InvitarFamiliar";
+import { CricketMark } from "@/components/icons";
+import type { Abuelo } from "@/lib/types";
 
 function fechaLegible(): string {
   const texto = new Date().toLocaleDateString("es-419", {
@@ -17,51 +21,94 @@ function fechaLegible(): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
+type Estado = "cargando" | "sin_dispositivo" | "listo";
+
 export default function AbueloPage() {
   const router = useRouter();
-  const [sesion, setSesion] = useState<Sesion | null>(null);
+  const [estado, setEstado] = useState<Estado>("cargando");
+  const [abuelo, setAbuelo] = useState<Abuelo | null>(null);
 
   useEffect(() => {
-    const s = obtenerSesion();
-    if (!s) {
-      router.push("/login");
-      return;
-    }
-    setSesion(s);
-  }, [router]);
+    // fetchAbuelo prueba el token de dispositivo y, si no hay, la sesión
+    // propia (persona mayor que se registró sola) — cualquiera alcanza.
+    fetchAbuelo("/api/abuelos")
+      .then(async (res) => {
+        if (!res.ok) {
+          setEstado("sin_dispositivo");
+          return;
+        }
+        const data = await res.json();
+        setAbuelo(data.abuelo);
+        setEstado("listo");
+      })
+      .catch(() => setEstado("sin_dispositivo"));
+  }, []);
 
-  if (!sesion) return null;
+  if (estado === "cargando") return null;
+
+  if (estado === "sin_dispositivo") {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center px-6 gap-4 bg-sand-200 text-center">
+        <div className="w-16 h-16 rounded-3xl bg-white shadow-warm-sm flex items-center justify-center">
+          <CricketMark className="w-8 h-8 text-ember-600" />
+        </div>
+        <h1 className="font-heading text-2xl font-semibold text-sand-900">
+          Este dispositivo no está configurado
+        </h1>
+        <p className="text-sand-700 text-lg max-w-sm">
+          Pídele a un familiar que entre a su cuenta y toque{" "}
+          <span className="font-semibold">&quot;Vincular este dispositivo&quot;</span> desde aquí
+          mismo, o crea tu propia cuenta si quieres usar a Grillo por tu cuenta.
+        </p>
+        <button
+          onClick={() => router.push("/registro-mayor")}
+          className="min-h-[52px] bg-ember-600 hover:bg-ember-700 text-white px-6 rounded-2xl font-semibold mt-2 transition-colors"
+        >
+          Crear mi propia cuenta
+        </button>
+        <button
+          onClick={() => router.push("/login")}
+          className="text-dusk-700 underline mt-1"
+        >
+          Ir al login
+        </button>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-sand-200 px-4 py-8">
       <div className="max-w-2xl mx-auto flex items-center justify-between mb-6 opacity-0 animate-fade-rise">
         <div>
           <h1 className="font-heading text-3xl font-semibold text-sand-900">
-            Hola, {sesion.abueloNombre} 👋
+            Hola, {abuelo?.nombre} 👋
           </h1>
           <p className="text-sand-700 text-lg">{fechaLegible()}</p>
         </div>
         <button
-          onClick={() => {
-            cerrarSesion();
+          onClick={async () => {
+            borrarTokenDispositivo();
+            await cerrarSesionFamiliar();
             router.push("/login");
           }}
-          className="min-h-[48px] min-w-[48px] flex items-center gap-1.5 px-3 rounded-full text-sand-800 hover:bg-sand-300 transition-colors focus:outline-none focus-visible:ring-4 focus-visible:ring-ember-300"
+          className="text-sand-500 text-sm underline"
         >
-          <LogOutIcon className="w-5 h-5" />
-          <span className="text-base">Salir</span>
+          No soy yo
         </button>
       </div>
 
       <div className="opacity-0 animate-fade-rise stagger-1">
-        <BotonEmergencia abueloId={sesion.abueloId} />
+        <BotonEmergencia />
       </div>
 
       <div className="opacity-0 animate-fade-rise stagger-2">
-        <VoiceChat abueloId={sesion.abueloId} usuarioId={sesion.usuarioId} />
+        <VoiceChat />
       </div>
       <div className="opacity-0 animate-fade-rise stagger-3">
-        <RecordatoriosPanel abueloId={sesion.abueloId} />
+        <RecordatoriosPanel />
+      </div>
+      <div className="max-w-2xl mx-auto mt-6 opacity-0 animate-fade-rise stagger-3">
+        <InvitarFamiliar />
       </div>
     </main>
   );

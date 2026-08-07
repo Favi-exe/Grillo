@@ -3,13 +3,9 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
+import { fetchAbuelo } from "@/lib/auth/fetchConAuth";
 import type { ChatMessage } from "@/lib/types";
 import { MicIcon, SendIcon } from "@/components/icons";
-
-interface VoiceChatProps {
-  abueloId: string;
-  usuarioId: string;
-}
 
 type Estado = "idle" | "escuchando" | "pensando" | "hablando";
 
@@ -38,7 +34,7 @@ function ThinkingDots() {
   );
 }
 
-export default function VoiceChat({ abueloId, usuarioId }: VoiceChatProps) {
+export default function VoiceChat() {
   const [historia, setHistoria] = useState<ChatMessage[]>([]);
   const [estado, setEstado] = useState<Estado>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -81,10 +77,10 @@ export default function VoiceChat({ abueloId, usuarioId }: VoiceChatProps) {
     setEstado("pensando");
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetchAbuelo("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ abueloId, usuarioId, historia, mensaje: texto }),
+        body: JSON.stringify({ historia, mensaje: texto }),
       });
       if (!res.ok) throw new Error(`Chat respondió ${res.status}`);
       const data = await res.json();

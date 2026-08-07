@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
 import type { Conversacion } from "@/lib/types";
 
 function formatoRelativo(fechaIso: string): string {
@@ -14,12 +15,12 @@ function formatoRelativo(fechaIso: string): string {
   return `hace ${dias} día${dias === 1 ? "" : "s"}`;
 }
 
-/** Indicador de "cómo está" Carlos para la familia — reusa el log de conversaciones que ya se guarda en cada charla. */
-export default function EstadoCarlos({ abueloId, nombre }: { abueloId: string; nombre: string }) {
+/** Indicador de "cómo está" el abuelo para la familia — reusa el log de conversaciones que ya se guarda en cada charla. */
+export default function EstadoCarlos({ nombre }: { nombre: string }) {
   const [ultima, setUltima] = useState<Conversacion | null>(null);
 
   useEffect(() => {
-    fetch(`/api/conversaciones?abueloId=${abueloId}`)
+    fetchFamiliar("/api/conversaciones")
       .then((res) => res.json())
       .then((data) => {
         const conversaciones: Conversacion[] = data.conversaciones ?? [];
@@ -28,7 +29,7 @@ export default function EstadoCarlos({ abueloId, nombre }: { abueloId: string; n
         setUltima(masReciente);
       })
       .catch((err) => console.error("[EstadoCarlos]", err));
-  }, [abueloId]);
+  }, []);
 
   return (
     <p className="text-base text-sand-600">

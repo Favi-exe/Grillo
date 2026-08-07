@@ -32,6 +32,32 @@ export async function chatWithGrillo(
   return chatMock(ctx, mensajeUsuario);
 }
 
+const ZONA_HORARIA = "America/Santiago";
+
+function describirMomentoActual(): string {
+  const ahora = new Date();
+  const partes = new Intl.DateTimeFormat("es-CL", {
+    timeZone: ZONA_HORARIA,
+    weekday: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(ahora);
+
+  const diaSemana = partes.find((p) => p.type === "weekday")?.value ?? "";
+  const hora = Number(partes.find((p) => p.type === "hour")?.value ?? "12");
+  const minuto = partes.find((p) => p.type === "minute")?.value ?? "00";
+
+  let franja: string;
+  if (hora >= 6 && hora < 12) franja = "por la mañana";
+  else if (hora >= 12 && hora < 14) franja = "al mediodía";
+  else if (hora >= 14 && hora < 19) franja = "por la tarde";
+  else if (hora >= 19 && hora < 23) franja = "por la noche";
+  else franja = "de madrugada";
+
+  return `${diaSemana} ${franja}, ${String(hora).padStart(2, "0")}:${minuto}`;
+}
+
 async function chatReal(
   ctx: ToolContext,
   nombreAbuelo: string,
@@ -42,7 +68,7 @@ async function chatReal(
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const system = buildSystemPrompt(nombreAbuelo, notasGenerales);
+  const system = buildSystemPrompt(nombreAbuelo, notasGenerales, describirMomentoActual());
 
   const messages: Anthropic.MessageParam[] = [
     ...historia.map((m) => ({ role: m.role, content: m.content }) as Anthropic.MessageParam),

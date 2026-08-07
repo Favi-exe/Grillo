@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useEffect, useState } from "react";
+import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
 import type { Recordatorio, TipoRecordatorio } from "@/lib/types";
 import { TipoRecordatorioIcon, TIPO_INFO } from "@/components/TipoRecordatorioIcon";
 import { PlusIcon, TrashIcon, PauseIcon, PlayIcon } from "@/components/icons";
@@ -47,13 +48,7 @@ const RecordatorioFilaFamiliar = memo(function RecordatorioFilaFamiliar({
   );
 });
 
-export default function RecordatoriosFamiliar({
-  abueloId,
-  usuarioId,
-}: {
-  abueloId: string;
-  usuarioId: string;
-}) {
+export default function RecordatoriosFamiliar() {
   const [recordatorios, setRecordatorios] = useState<Recordatorio[]>([]);
   const [tipo, setTipo] = useState<TipoRecordatorio>("medicamento");
   const [descripcion, setDescripcion] = useState("");
@@ -62,25 +57,24 @@ export default function RecordatoriosFamiliar({
   const [guardando, setGuardando] = useState(false);
 
   async function cargar() {
-    const res = await fetch(`/api/recordatorios?abueloId=${abueloId}`);
+    const res = await fetchFamiliar("/api/recordatorios");
     const data = await res.json();
     setRecordatorios(data.recordatorios ?? []);
   }
 
   useEffect(() => {
     cargar();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [abueloId]);
+  }, []);
 
   async function crear(e: React.FormEvent) {
     e.preventDefault();
     if (!descripcion.trim()) return;
     setGuardando(true);
     try {
-      await fetch("/api/recordatorios", {
+      await fetchFamiliar("/api/recordatorios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ abueloId, tipo, descripcion, hora, frecuencia, creadoPor: usuarioId }),
+        body: JSON.stringify({ tipo, descripcion, hora, frecuencia }),
       });
       setDescripcion("");
       await cargar();
@@ -90,12 +84,12 @@ export default function RecordatoriosFamiliar({
   }
 
   async function eliminar(id: string) {
-    await fetch(`/api/recordatorios/${id}`, { method: "DELETE" });
+    await fetchFamiliar(`/api/recordatorios/${id}`, { method: "DELETE" });
     await cargar();
   }
 
   async function toggleActivo(r: Recordatorio) {
-    await fetch(`/api/recordatorios/${r.id}`, {
+    await fetchFamiliar(`/api/recordatorios/${r.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ activo: !r.activo }),

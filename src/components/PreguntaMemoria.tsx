@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
 import { SearchIcon } from "@/components/icons";
 
 interface RespuestaMemoria {
@@ -9,7 +10,7 @@ interface RespuestaMemoria {
   fuente: "mock" | "real";
 }
 
-export default function PreguntaMemoria({ abueloId }: { abueloId: string }) {
+export default function PreguntaMemoria({ abueloNombre }: { abueloNombre: string }) {
   const [pregunta, setPregunta] = useState("");
   const [respuesta, setRespuesta] = useState<RespuestaMemoria | null>(null);
   const [cargando, setCargando] = useState(false);
@@ -20,10 +21,10 @@ export default function PreguntaMemoria({ abueloId }: { abueloId: string }) {
     setCargando(true);
     setRespuesta(null);
     try {
-      const res = await fetch("/api/memorias/consultar", {
+      const res = await fetchFamiliar("/api/memorias/consultar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ abueloId, pregunta }),
+        body: JSON.stringify({ pregunta }),
       });
       const data = await res.json();
       setRespuesta(data);
@@ -35,7 +36,7 @@ export default function PreguntaMemoria({ abueloId }: { abueloId: string }) {
   return (
     <div className="bg-dusk-700 rounded-3xl shadow-warm p-5">
       <h2 className="font-heading text-lg font-semibold text-white mb-1">
-        Pregúntale a la memoria de Carlos
+        Pregúntale a la memoria de {abueloNombre}
       </h2>
       <p className="text-base text-dusk-100 mb-4">
         Ej: &quot;cuéntame una historia sobre mi papá&quot; o &quot;¿cómo conoció a mi mamá?&quot;
