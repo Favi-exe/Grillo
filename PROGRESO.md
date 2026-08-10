@@ -3,6 +3,49 @@
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
 
+## Sesión 12 — Detección de ánimo bajo sostenido + gráfico para la familia
+
+Pedido: que Grillo note cuando alguien "lleva un par de días triste" y le
+avise a la familia con contexto concreto (no solo "está triste"), más
+gráficos de evolución del ánimo inspirados en la app Yana.
+
+**Vocabulario cerrado de emociones** (`src/lib/emociones.ts`): antes
+`emocion_detectada` era texto libre de Claude ("un poco triste", "medio
+nostálgico"...) — imposible de agregar. Ahora la tool `guardar_memoria`
+restringe a 9 valores fijos, cada uno con una valencia 1-5, lo que permite
+graficar una evolución real en el tiempo.
+
+**Detección de patrón** (`src/lib/animo.ts`): tras guardar una memoria,
+si el promedio de valencia de los recuerdos de los últimos 4 días es bajo
+(≤2, o sea tristeza/soledad/preocupación sostenida) y hay al menos 3
+recuerdos en la ventana (para no disparar por un evento aislado), Grillo
+le pide a Claude que redacte una nota corta y concreta a partir de lo que
+la persona realmente contó, y se la manda por correo a cada familiar
+vinculado. Throttle de 48hs para no repetir el aviso todos los días.
+
+**Decisión de producto, no solo técnica**: no se construyó nada parecido
+a las pantallas de "Evaluación de depresión/ansiedad/autoestima" con
+niveles de severidad que se ven en Yana — eso simularía una escala clínica
+sin validar, dando una falsa sensación de certeza médica que Grillo no
+tiene forma de respaldar (mismo principio que ya rige las reglas del
+system prompt sobre no dar diagnósticos). Se optó por observación de
+patrón + sugerencia de contacto humano.
+
+**UI nueva**: `EstadoAnimoFamiliar.tsx` en `/familia` — gráfico de línea
+SVG (sin librerías) de la evolución de los últimos 14 días, con hover, y
+una barra de distribución bajo/neutral/alto. Paleta propia de Grillo
+(clay/sand/gold), no la de Yana.
+
+**Verificado en vivo, con datos reales**: se le contaron a Grillo (como
+Rosa) tres historias tristes distintas en la misma sesión — la alerta se
+disparó con un resumen que mencionaba puntualmente a su esposo fallecido
+(Jorge) y el aniversario, se logueó el correo mock a Pedro, y el gráfico +
+la barra de distribución se vieron correctos en `/familia`. Se encontró y
+corrigió un detalle en el camino: el resumen de Claude a veces traía
+`**negrita**` en markdown que se mostraba como asteriscos literales — se
+agregó instrucción explícita de texto plano más un saneo de respaldo.
+Datos de prueba borrados de Supabase y Pinecone al terminar.
+
 ## Sesión 11 — Límite de uso diario para no quemar créditos de Claude
 
 Preocupación real: sin ningún control, un loop o un uso intensivo del chat
