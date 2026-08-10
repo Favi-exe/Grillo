@@ -104,15 +104,15 @@ data/                       # store local mock (gitignored, se genera solo)
 
 ## Pasar a las APIs reales
 
-1. Copiá `.env.example` a `.env.local`.
-2. Pegá las keys que tengas — no hace falta completarlas todas a la vez,
+1. Copia `.env.example` a `.env.local`.
+2. Pega las keys que tengas — no hace falta completarlas todas a la vez,
    cada servicio se activa de forma independiente, **excepto Supabase**,
    que hace falta para el login real (ver arriba).
-3. Corré `supabase/schema.sql` en el SQL editor del proyecto (o por API,
+3. Corre `supabase/schema.sql` en el SQL editor del proyecto (o por API,
    como se hizo acá — ver PROGRESO.md) antes de cargar
    `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` — crea las
    tablas, los índices y las políticas de seguridad por familia.
-4. Reiniciá `npm run dev`. No hace falta cambiar nada de código.
+4. Reinicia `npm run dev`. No hace falta cambiar nada de código.
 
 Ver también [`PROGRESO.md`](PROGRESO.md) para el detalle de qué se construyó,
 qué quedó mockeado, y qué se recomienda como siguiente paso.

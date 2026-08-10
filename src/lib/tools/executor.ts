@@ -2,10 +2,40 @@ import {
   createRecordatorio,
   listRecordatorios,
   createMemoria,
+  listMemorias,
 } from "@/lib/db";
 import { getClima } from "@/lib/ai/weather";
 import { indexarMemoria, buscarMemoriasSimilares } from "@/lib/ai/pinecone";
 import type { TipoRecordatorio } from "@/lib/types";
+
+const VENTANA_DUPLICADOS_HORAS = 6;
+const UMBRAL_SIMILITUD = 0.75;
+
+function normalizarPalabras(texto: string): Set<string> {
+  return new Set(
+    texto
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9\s]/g, "")
+      .split(/\s+/)
+      .filter((palabra) => palabra.length > 2)
+  );
+}
+
+// Coeficiente de solapamiento (no Jaccard): usa el conjunto MÁS CHICO como
+// denominador, para que un resumen breve que repite lo esencial de uno más
+// largo (o viceversa) igual se detecte como el mismo recuerdo.
+function similitud(a: string, b: string): number {
+  const palabrasA = normalizarPalabras(a);
+  const palabrasB = normalizarPalabras(b);
+  if (palabrasA.size === 0 || palabrasB.size === 0) return 0;
+  let interseccion = 0;
+  for (const palabra of palabrasA) {
+    if (palabrasB.has(palabra)) interseccion++;
+  }
+  return interseccion / Math.min(palabrasA.size, palabrasB.size);
+}
 
 export interface ToolContext {
   abueloId: string;
@@ -44,9 +74,24 @@ export async function executeTool(
     }
 
     case "guardar_memoria": {
+      const resumenNuevo = String(input.resumen ?? "");
+
+      // Red de seguridad extra contra duplicados: si la persona repite una
+      // historia que ya se guardó hace poco (p. ej. porque Grillo no
+      // respondió bien la primera vez y se lo volvió a contar), no la
+      // vuelve a guardar como un recuerdo aparte.
+      const existentes = await listMemorias(ctx.abueloId);
+      const yaGuardada = existentes.find((m) => {
+        const horasDesde = (Date.now() - new Date(m.fecha).getTime()) / 3_600_000;
+        return horasDesde <= VENTANA_DUPLICADOS_HORAS && similitud(m.resumen, resumenNuevo) >= UMBRAL_SIMILITUD;
+      });
+      if (yaGuardada) {
+        return { nombre, input, resultado: { yaGuardada: true, memoria: yaGuardada } };
+      }
+
       const memoria = await createMemoria({
         abuelo_id: ctx.abueloId,
-        resumen: String(input.resumen ?? ""),
+        resumen: resumenNuevo,
         transcripcion_original: String(input.transcripcion_original ?? ""),
         tema: String(input.tema ?? "general"),
         personas_mencionadas: Array.isArray(input.personas_mencionadas)

@@ -27,6 +27,11 @@ export async function listUsuarios(): Promise<Usuario[]> {
 export async function getUsuario(id: string): Promise<Usuario | undefined> {
   return usandoSupabase() ? supabaseStore.getUsuario(id) : localStore.getUsuario(id);
 }
+export async function listFamiliaresDeAbuelo(abueloId: string): Promise<Usuario[]> {
+  return usandoSupabase()
+    ? supabaseStore.listFamiliaresDeAbuelo(abueloId)
+    : localStore.listFamiliaresDeAbuelo(abueloId);
+}
 export async function getUsuarioByAuthId(authUserId: string): Promise<Usuario | undefined> {
   return usandoSupabase()
     ? supabaseStore.getUsuarioByAuthId(authUserId)

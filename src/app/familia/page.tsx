@@ -11,6 +11,7 @@ import PreguntaMemoria from "@/components/PreguntaMemoria";
 import AlertasFamiliar from "@/components/AlertasFamiliar";
 import EstadoCarlos from "@/components/EstadoCarlos";
 import VincularDispositivo from "@/components/VincularDispositivo";
+import DispositivosVinculados from "@/components/DispositivosVinculados";
 import OnboardingPerfil from "@/components/OnboardingPerfil";
 import OnboardingAbuelo from "@/components/OnboardingAbuelo";
 import { LogOutIcon } from "@/components/icons";
@@ -106,6 +107,9 @@ export default function FamiliaPage() {
               guardarTokenDispositivo(token);
             }}
           />
+        </div>
+        <div className="opacity-0 animate-fade-rise stagger-1">
+          <DispositivosVinculados />
         </div>
         <div className="opacity-0 animate-fade-rise stagger-2">
           <PreguntaMemoria abueloNombre={abuelo?.nombre ?? ""} />

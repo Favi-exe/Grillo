@@ -39,7 +39,7 @@ export default function VoiceChat() {
   const [estado, setEstado] = useState<Estado>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const finRef = useRef<HTMLDivElement | null>(null);
 
   const { disponible: sttDisponible, escuchando, transcripcion, error: sttError, iniciar, detener } =
     useSpeechRecognition("es-419");
@@ -68,7 +68,7 @@ export default function VoiceChat() {
   }, [escuchando, transcripcion]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    finRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [historia, estado]);
 
   async function enviarMensaje(texto: string) {
@@ -162,10 +162,7 @@ export default function VoiceChat() {
           en el resto de la interfaz vive en tonos arena; este gradiente
           aparece solo aquí para señalar "este es el corazón de Grillo". */}
       <div className="relative rounded-5xl bg-dusk p-5 sm:p-7 shadow-warm-lg">
-        <div
-          ref={scrollRef}
-          className="w-full bg-sand-50/95 backdrop-blur-sm rounded-4xl shadow-inner p-4 mb-6 max-h-[42vh] overflow-y-auto flex flex-col gap-3 scroll-smooth"
-        >
+        <div className="w-full bg-sand-50/95 backdrop-blur-sm rounded-4xl shadow-inner p-4 mb-6 min-h-[180px] flex flex-col gap-3">
           {historia.length === 0 && (
             <p className="text-center text-sand-700 py-8 text-lg">
               Toca el botón y empieza a hablar con Grillo.
@@ -175,6 +172,7 @@ export default function VoiceChat() {
             <MessageBubble key={i} m={m} />
           ))}
           {estado === "pensando" && <ThinkingDots />}
+          <div ref={finRef} />
         </div>
 
         <div className="flex flex-col items-center">

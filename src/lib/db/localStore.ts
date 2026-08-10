@@ -74,6 +74,9 @@ export const localStore = {
   getUsuario(id: string): Usuario | undefined {
     return ensureDb().usuarios.find((u) => u.id === id);
   },
+  listFamiliaresDeAbuelo(abueloId: string): Usuario[] {
+    return ensureDb().usuarios.filter((u) => u.abuelo_id === abueloId && u.rol === "familiar");
+  },
   getUsuarioByAuthId(authUserId: string): Usuario | undefined {
     return ensureDb().usuarios.find((u) => u.auth_user_id === authUserId);
   },

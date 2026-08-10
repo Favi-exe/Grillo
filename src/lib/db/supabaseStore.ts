@@ -25,6 +25,15 @@ export const supabaseStore = {
     if (error) throw error;
     return (data as Usuario) ?? undefined;
   },
+  async listFamiliaresDeAbuelo(abueloId: string): Promise<Usuario[]> {
+    const { data, error } = await getSupabaseClient()
+      .from("usuarios")
+      .select("*")
+      .eq("abuelo_id", abueloId)
+      .eq("rol", "familiar");
+    if (error) throw error;
+    return data as Usuario[];
+  },
   async getUsuarioByAuthId(authUserId: string): Promise<Usuario | undefined> {
     const { data, error } = await getSupabaseClient()
       .from("usuarios")
