@@ -3,6 +3,53 @@
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
 
+## Sesión 13 — Tarjetas de historia con carita, auto-registro diario y pregunta de la semana
+
+Seguimiento directo de la Sesión 12, con tres pedidos inspirados en apps
+de bienestar (Yana y similares) pero adaptados al modelo de Grillo (1 a 1
+con la familia, no una comunidad).
+
+1. **Tarjetas de historia rediseñadas** (`MemoriasList.tsx`): cada
+   historia capturada ahora muestra una carita (según el balance
+   bajo/neutral/alto de la emoción), la etiqueta del estado de ánimo, la
+   fecha, categoría y personas mencionadas — antes solo eran pastillas de
+   texto sin ícono.
+2. **Auto-registro diario** (`RegistroAnimoAbuelo.tsx` +
+   `registros_animo`): "¿Cómo te sientes hoy?" con 5 caritas propias de
+   Grillo (Terrible/Mal/Regular/Bien/Excelente) en degradé clay→sand→gold
+   — deliberadamente NO un semáforo rojo-verde genérico como en las apps
+   de referencia, para mantener la paleta de marca. Uno por día.
+3. **Pregunta de la semana** (`PreguntaSemana.tsx`): pregunta de
+   reminiscencia que rota semanalmente de una lista curada de 12. Se
+   descartó a propósito la parte de "feed social" de las apps de
+   referencia (respuestas de otros usuarios, likes, comentarios) — Grillo
+   es una charla privada con la propia familia, no una comunidad, y sumar
+   eso sería un producto distinto. La respuesta entra por el mismo
+   `/api/chat`, así que si vale la pena, Grillo la guarda como historia
+   normal (se vio en vivo: una respuesta sobre un consejo del padre quedó
+   guardada con `emocion_detectada: "gratitud"`).
+
+**Los registros directos ahora alimentan la detección de ánimo bajo**
+(`lib/animoDatos.ts` combina `memorias` + `registros_animo` en una sola
+serie de puntos) — antes `chequearYAvisarAnimo` solo miraba lo que Grillo
+inferían de la charla; ahora un patrón puede salir también de lo que la
+persona marcó directamente. El panel familiar suma un "contador de
+estados" (las 5 caritas con la cantidad de veces que se marcó cada una).
+
+**Bug real encontrado y corregido**: las 3 caritas de tonos sand/gold
+salían sin color de fondo (transparentes) — `tailwind.config.ts` solo
+escaneaba `src/app` y `src/components`, no `src/lib`, así que las clases
+`bg-sand-500` / `bg-gold-400` / `bg-gold-600` que viven en
+`emociones.ts` se purgaban en silencio (las de `clay` "funcionaban" de
+pura casualidad, por aparecer también, literal, en otros componentes ya
+escaneados). Se cambió el glob a todo `src/**`.
+
+**Verificado en vivo, con datos reales**: auto-registro guardado con la
+valencia correcta (confirmado en Supabase), respuesta a la pregunta de la
+semana capturada como memoria real, y el panel familiar mostrando
+correctamente el gráfico, la distribución y el contador combinando ambas
+fuentes. Datos de prueba borrados de Supabase y Pinecone al terminar.
+
 ## Sesión 12 — Detección de ánimo bajo sostenido + gráfico para la familia
 
 Pedido: que Grillo note cuando alguien "lleva un par de días triste" y le
