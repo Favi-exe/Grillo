@@ -9,6 +9,7 @@ import { guardarTokenDispositivo } from "@/lib/auth/deviceToken";
 import MemoriasList from "@/components/MemoriasList";
 import PreguntaMemoria from "@/components/PreguntaMemoria";
 import AlertasFamiliar from "@/components/AlertasFamiliar";
+import EstadoAnimoFamiliar from "@/components/EstadoAnimoFamiliar";
 import EstadoCarlos from "@/components/EstadoCarlos";
 import VincularDispositivo from "@/components/VincularDispositivo";
 import DispositivosVinculados from "@/components/DispositivosVinculados";
@@ -99,6 +100,9 @@ export default function FamiliaPage() {
       <div className="max-w-3xl mx-auto flex flex-col gap-6">
         <div className="opacity-0 animate-fade-rise stagger-1">
           <AlertasFamiliar />
+        </div>
+        <div className="opacity-0 animate-fade-rise stagger-1">
+          <EstadoAnimoFamiliar />
         </div>
         <div className="opacity-0 animate-fade-rise stagger-1">
           <VincularDispositivo

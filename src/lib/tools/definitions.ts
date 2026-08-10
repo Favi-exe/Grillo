@@ -1,4 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
+import { EMOCIONES } from "@/lib/emociones";
 
 export function buildSystemPrompt(
   nombreAbuelo: string,
@@ -105,7 +106,8 @@ export const GRILLO_TOOLS: Anthropic.Tool[] = [
         },
         emocion_detectada: {
           type: "string",
-          description: "Emoción predominante, ej: 'nostalgia', 'alegría', 'orgullo', 'tristeza', 'amor'",
+          enum: [...EMOCIONES],
+          description: "Emoción predominante de la anécdota o del momento, la que mejor encaje de la lista",
         },
       },
       required: ["resumen", "transcripcion_original", "tema", "emocion_detectada"],

@@ -69,6 +69,17 @@ create table if not exists alertas_emergencia (
   fecha_resuelta timestamptz
 );
 
+-- Cuando Grillo nota un patrón de ánimo bajo sostenido (varios días seguidos
+-- de tristeza/soledad/preocupación, no un evento aislado), le manda un aviso
+-- a la familia y deja constancia acá — sirve para no repetir el mismo aviso
+-- todos los días (se chequea la última fila antes de generar una nueva).
+create table if not exists alertas_animo (
+  id uuid primary key default uuid_generate_v4(),
+  abuelo_id uuid not null references abuelos(id) on delete cascade,
+  fecha timestamptz not null default now(),
+  resumen text not null
+);
+
 -- Token persistente por dispositivo (tablet/notebook del abuelo). Se genera
 -- una vez desde la cuenta del familiar ("vincular este dispositivo") y
 -- queda guardado en el navegador del abuelo — nunca vence, nunca pide login
@@ -88,6 +99,7 @@ create index if not exists idx_recordatorios_abuelo on recordatorios(abuelo_id);
 create index if not exists idx_memorias_abuelo on memorias(abuelo_id);
 create index if not exists idx_conversaciones_abuelo on conversaciones(abuelo_id);
 create index if not exists idx_alertas_abuelo on alertas_emergencia(abuelo_id);
+create index if not exists idx_alertas_animo_abuelo on alertas_animo(abuelo_id);
 create index if not exists idx_dispositivos_abuelo on abuelo_dispositivos(abuelo_id);
 create index if not exists idx_dispositivos_token on abuelo_dispositivos(token);
 create index if not exists idx_usuarios_auth on usuarios(auth_user_id);
@@ -109,6 +121,7 @@ alter table recordatorios enable row level security;
 alter table memorias enable row level security;
 alter table conversaciones enable row level security;
 alter table alertas_emergencia enable row level security;
+alter table alertas_animo enable row level security;
 alter table abuelo_dispositivos enable row level security;
 
 drop policy if exists usuarios_propio_o_familia on usuarios;
@@ -151,6 +164,11 @@ create policy alertas_mi_familia on alertas_emergencia for all to authenticated
   using (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()))
   with check (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()));
 
+drop policy if exists alertas_animo_mi_familia on alertas_animo;
+create policy alertas_animo_mi_familia on alertas_animo for all to authenticated
+  using (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()))
+  with check (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()));
+
 -- Si las tablas se crean vía la dashboard/CLI de Supabase estos GRANT ya
 -- vienen dados de fábrica. Si se corre este script por conexión directa
 -- (Management API, como se hizo acá), hay que darlos a mano — si no,
@@ -159,7 +177,7 @@ create policy alertas_mi_familia on alertas_emergencia for all to authenticated
 grant usage on schema public to service_role, authenticated;
 grant all on all tables in schema public to service_role;
 grant all on all sequences in schema public to service_role;
-grant select, insert, update, delete on abuelos, usuarios, recordatorios, memorias, conversaciones, alertas_emergencia to authenticated;
+grant select, insert, update, delete on abuelos, usuarios, recordatorios, memorias, conversaciones, alertas_emergencia, alertas_animo to authenticated;
 alter default privileges in schema public grant all on tables to service_role;
 alter default privileges in schema public grant all on sequences to service_role;
 

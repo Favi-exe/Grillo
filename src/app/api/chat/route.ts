@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { chatWithGrillo, type ChatResult } from "@/lib/ai/claude";
 import { getAbuelo, createConversacion, contarConversacionesDesde } from "@/lib/db";
 import { AuthError, requireAbueloAccess } from "@/lib/auth/server";
+import { chequearYAvisarAnimo } from "@/lib/animo";
 import type { ChatMessage } from "@/lib/types";
 
 // Techo de mensajes por persona mayor en una ventana móvil de 24hs — para no
@@ -61,6 +62,17 @@ export async function POST(req: NextRequest) {
         fecha: new Date().toISOString(),
         transcripcion_completa: nuevaHistoria,
       }).catch((err) => console.error("[chat] no se pudo persistir conversación:", err));
+
+      // Solo chequea el patrón de ánimo cuando se guardó una memoria nueva
+      // esta vuelta — no en cada mensaje, para no gastar una consulta y una
+      // eventual llamada extra a Claude de más.
+      if (result.toolCalls.some((t) => t.nombre === "guardar_memoria")) {
+        try {
+          await chequearYAvisarAnimo(abueloId, abuelo.nombre);
+        } catch (err) {
+          console.error("[chat] fallo chequeando el ánimo:", err);
+        }
+      }
     }
 
     return NextResponse.json({

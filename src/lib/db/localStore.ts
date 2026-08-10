@@ -8,6 +8,7 @@ import type {
   Memoria,
   Conversacion,
   AlertaEmergencia,
+  AlertaAnimo,
   AbueloDispositivo,
 } from "@/lib/types";
 
@@ -18,6 +19,7 @@ interface DbShape {
   memorias: Memoria[];
   conversaciones: Conversacion[];
   alertas_emergencia: AlertaEmergencia[];
+  alertas_animo: AlertaAnimo[];
   abuelo_dispositivos: AbueloDispositivo[];
 }
 
@@ -35,6 +37,7 @@ function vacio(): DbShape {
     memorias: [],
     conversaciones: [],
     alertas_emergencia: [],
+    alertas_animo: [],
     abuelo_dispositivos: [],
   };
 }
@@ -53,6 +56,7 @@ function ensureDb(): DbShape {
     const parsed = JSON.parse(raw) as Partial<DbShape>;
     // Compatibilidad con db.json generados antes de sumar estas colecciones.
     if (!parsed.alertas_emergencia) parsed.alertas_emergencia = [];
+    if (!parsed.alertas_animo) parsed.alertas_animo = [];
     if (!parsed.abuelo_dispositivos) parsed.abuelo_dispositivos = [];
     return parsed as DbShape;
   } catch {
@@ -205,6 +209,25 @@ export const localStore = {
     };
     save(db);
     return db.alertas_emergencia[idx];
+  },
+
+  // --- Alertas de ánimo ---
+  crearAlertaAnimo(abueloId: string, resumen: string): AlertaAnimo {
+    const db = ensureDb();
+    const nueva: AlertaAnimo = {
+      id: randomUUID(),
+      abuelo_id: abueloId,
+      fecha: new Date().toISOString(),
+      resumen,
+    };
+    db.alertas_animo.push(nueva);
+    save(db);
+    return nueva;
+  },
+  listAlertasAnimo(abueloId: string): AlertaAnimo[] {
+    return ensureDb()
+      .alertas_animo.filter((a) => a.abuelo_id === abueloId)
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
   },
 
   // --- Dispositivos del abuelo (login persistente sin contraseña) ---

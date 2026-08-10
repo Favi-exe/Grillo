@@ -74,6 +74,13 @@ export interface AlertaEmergencia {
   fecha_resuelta?: string | null;
 }
 
+export interface AlertaAnimo {
+  id: string;
+  abuelo_id: string;
+  fecha: string;
+  resumen: string;
+}
+
 export interface AbueloDispositivo {
   id: string;
   abuelo_id: string;

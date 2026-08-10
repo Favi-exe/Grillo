@@ -8,6 +8,7 @@ import type {
   Memoria,
   Conversacion,
   AlertaEmergencia,
+  AlertaAnimo,
   AbueloDispositivo,
 } from "@/lib/types";
 
@@ -124,6 +125,17 @@ export async function resolverAlertaEmergencia(id: string): Promise<AlertaEmerge
   return usandoSupabase()
     ? supabaseStore.resolverAlertaEmergencia(id)
     : localStore.resolverAlertaEmergencia(id);
+}
+
+export async function crearAlertaAnimo(abueloId: string, resumen: string): Promise<AlertaAnimo> {
+  return usandoSupabase()
+    ? supabaseStore.crearAlertaAnimo(abueloId, resumen)
+    : localStore.crearAlertaAnimo(abueloId, resumen);
+}
+export async function listAlertasAnimo(abueloId: string): Promise<AlertaAnimo[]> {
+  return usandoSupabase()
+    ? supabaseStore.listAlertasAnimo(abueloId)
+    : localStore.listAlertasAnimo(abueloId);
 }
 
 export async function crearDispositivo(input: {

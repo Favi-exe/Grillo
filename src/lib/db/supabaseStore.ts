@@ -7,6 +7,7 @@ import type {
   Memoria,
   Conversacion,
   AlertaEmergencia,
+  AlertaAnimo,
   AbueloDispositivo,
 } from "@/lib/types";
 
@@ -211,6 +212,31 @@ export const supabaseStore = {
       .maybeSingle();
     if (error) throw error;
     return (data as AlertaEmergencia) ?? undefined;
+  },
+
+  async crearAlertaAnimo(abueloId: string, resumen: string): Promise<AlertaAnimo> {
+    const nueva = {
+      id: randomUUID(),
+      abuelo_id: abueloId,
+      fecha: new Date().toISOString(),
+      resumen,
+    };
+    const { data, error } = await getSupabaseClient()
+      .from("alertas_animo")
+      .insert(nueva)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as AlertaAnimo;
+  },
+  async listAlertasAnimo(abueloId: string): Promise<AlertaAnimo[]> {
+    const { data, error } = await getSupabaseClient()
+      .from("alertas_animo")
+      .select("*")
+      .eq("abuelo_id", abueloId)
+      .order("fecha", { ascending: false });
+    if (error) throw error;
+    return data as AlertaAnimo[];
   },
 
   async crearDispositivo(input: {
