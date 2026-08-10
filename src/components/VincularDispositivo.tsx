@@ -47,7 +47,7 @@ export default function VincularDispositivo({
             Este dispositivo ya está vinculado
           </h2>
           <p className="text-base text-sand-700">
-            Si esta es la tablet/notebook de tu familiar mayor, entrá ahora — no va a volver a
+            Si esta es la tablet/notebook de tu familiar mayor, entra ahora — no va a volver a
             pedir login.
           </p>
         </div>
@@ -68,7 +68,7 @@ export default function VincularDispositivo({
           Vincular este dispositivo
         </h2>
         <p className="text-base text-sand-700">
-          Hacé esto desde la tablet/notebook que va a usar tu familiar mayor — queda configurada
+          Haz esto desde la tablet/notebook que va a usar tu familiar mayor — queda configurada
           una sola vez, nunca más pide iniciar sesión.
         </p>
         {error && <p className="text-clay-600 mt-1">{error}</p>}
