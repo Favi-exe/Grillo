@@ -88,7 +88,11 @@ async function chatReal(
     });
 
     const textBlocks = response.content.filter((b) => b.type === "text") as Anthropic.TextBlock[];
-    finalText = textBlocks.map((b) => b.text).join("\n").trim();
+    const texto = textBlocks.map((b) => b.text).join("\n").trim();
+    // Solo pisa finalText si el turno trajo texto de verdad — un turno de
+    // puro tool_use (p. ej. guardar_memoria discreto) no debe borrar la
+    // respuesta conversacional que ya se había armado en un turno previo.
+    if (texto) finalText = texto;
 
     if (response.stop_reason !== "tool_use") {
       break;
@@ -112,6 +116,28 @@ async function chatReal(
     }
 
     messages.push({ role: "user", content: toolResultContents });
+  }
+
+  // Si después de usar herramientas (p. ej. guardar_memoria de forma
+  // discreta) el modelo nunca escribió una respuesta conversacional — pasa
+  // cuando el último turno termina siendo solo un tool_use — no mostramos
+  // el genérico "¿me repites?": eso hace que la persona repita la misma
+  // historia y quede guardada duplicada. En vez de eso, forzamos una
+  // respuesta de texto con lo que ya se sabe de la conversación.
+  if (!finalText) {
+    const respuestaForzada = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 1024,
+      system,
+      messages,
+      // Sin `tools`: no puede volver a esconderse detrás de otro tool_use,
+      // tiene que contestar en texto sí o sí.
+    });
+    finalText = respuestaForzada.content
+      .filter((b) => b.type === "text")
+      .map((b) => (b as Anthropic.TextBlock).text)
+      .join("\n")
+      .trim();
   }
 
   return { reply: finalText || "Perdón, ¿me repites? Me quedé pensando.", toolCalls, fuente: "real" };
