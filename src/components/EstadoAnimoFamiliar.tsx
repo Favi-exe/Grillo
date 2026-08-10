@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
-import { HeartIcon } from "@/components/icons";
+import {
+  HeartIcon,
+  CaraMuyBajaIcon,
+  CaraBajaIcon,
+  CaraNeutralIcon,
+  CaraBuenaIcon,
+  CaraAltaIcon,
+} from "@/components/icons";
+import { NIVELES_ANIMO } from "@/lib/emociones";
 
 interface PuntoEvolucion {
   fecha: string;
@@ -14,7 +22,10 @@ interface DatosAnimo {
   distribucion: { bajo: number; neutral: number; alto: number } | null;
   totalRecuerdos: number;
   ultimaAlerta: { fecha: string; resumen: string } | null;
+  conteoRegistros: { valencia: number; cantidad: number }[] | null;
 }
+
+const ICONOS_NIVEL = [CaraMuyBajaIcon, CaraBajaIcon, CaraNeutralIcon, CaraBuenaIcon, CaraAltaIcon];
 
 const ANCHO = 300;
 const ALTO = 120;
@@ -176,6 +187,34 @@ function BarraDistribucion({
   );
 }
 
+function ContadorRegistros({
+  conteo,
+}: {
+  conteo: { valencia: number; cantidad: number }[];
+}) {
+  return (
+    <div className="flex justify-between gap-1">
+      {conteo.map(({ valencia, cantidad }) => {
+        const nivel = NIVELES_ANIMO[valencia - 1];
+        const Icono = ICONOS_NIVEL[valencia - 1];
+        return (
+          <div key={valencia} className="flex flex-col items-center gap-1">
+            <div className="relative">
+              <span className={`w-10 h-10 rounded-2xl flex items-center justify-center text-white ${nivel.fondo}`}>
+                <Icono className="w-5 h-5" />
+              </span>
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-white border border-sand-300 text-sand-800 text-xs font-semibold flex items-center justify-center">
+                {cantidad}
+              </span>
+            </div>
+            <span className="text-xs text-sand-600">{nivel.etiqueta}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function EstadoAnimoFamiliar() {
   const [datos, setDatos] = useState<DatosAnimo | null>(null);
 
@@ -215,6 +254,15 @@ export default function EstadoAnimoFamiliar() {
         <div className="mt-4 pt-4 border-t border-sand-200">
           <p className="text-sm text-sand-600 mb-2">Estado de ánimo más frecuente</p>
           <BarraDistribucion distribucion={datos.distribucion} />
+        </div>
+      )}
+
+      {datos.conteoRegistros && (
+        <div className="mt-4 pt-4 border-t border-sand-200">
+          <p className="text-sm text-sand-600 mb-3">
+            Cuántas veces marcó cada carita en &quot;¿Cómo te sientes hoy?&quot;
+          </p>
+          <ContadorRegistros conteo={datos.conteoRegistros} />
         </div>
       )}
     </div>

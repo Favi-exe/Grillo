@@ -8,6 +8,8 @@ import { cerrarSesionFamiliar } from "@/lib/auth/familiarSession";
 import VoiceChat from "@/components/VoiceChat";
 import RecordatoriosPanel from "@/components/RecordatoriosPanel";
 import BotonEmergencia from "@/components/BotonEmergencia";
+import RegistroAnimoAbuelo from "@/components/RegistroAnimoAbuelo";
+import PreguntaSemana from "@/components/PreguntaSemana";
 import InvitarFamiliar from "@/components/InvitarFamiliar";
 import { CricketMark } from "@/components/icons";
 import type { Abuelo } from "@/lib/types";
@@ -99,6 +101,14 @@ export default function AbueloPage() {
 
       <div className="opacity-0 animate-fade-rise stagger-1">
         <BotonEmergencia />
+      </div>
+
+      <div className="opacity-0 animate-fade-rise stagger-1">
+        <RegistroAnimoAbuelo nombre={abuelo?.nombre ?? ""} />
+      </div>
+
+      <div className="opacity-0 animate-fade-rise stagger-1">
+        <PreguntaSemana />
       </div>
 
       <div className="opacity-0 animate-fade-rise stagger-2">

@@ -81,6 +81,13 @@ export interface AlertaAnimo {
   resumen: string;
 }
 
+export interface RegistroAnimo {
+  id: string;
+  abuelo_id: string;
+  valencia: number; // 1 (terrible) a 5 (excelente)
+  fecha: string;
+}
+
 export interface AbueloDispositivo {
   id: string;
   abuelo_id: string;

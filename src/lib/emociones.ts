@@ -38,11 +38,47 @@ export function valenciaDe(emocion: string): number {
   return VALENCIA[emocion as Emocion] ?? 3;
 }
 
+// Etiquetas legibles (con tildes) para mostrarle a la familia — el valor
+// que guarda la tool es el token sin acentos (más robusto para el modelo).
+const ETIQUETAS: Record<Emocion, string> = {
+  alegria: "Alegría",
+  amor: "Amor",
+  gratitud: "Gratitud",
+  orgullo: "Orgullo",
+  nostalgia: "Nostalgia",
+  neutral: "Neutral",
+  preocupacion: "Preocupación",
+  tristeza: "Tristeza",
+  soledad: "Soledad",
+};
+
+export function etiquetaDe(emocion: string): string {
+  return ETIQUETAS[emocion as Emocion] ?? emocion;
+}
+
 export type BalanceAnimo = "bajo" | "neutral" | "alto";
 
-export function balanceDe(emocion: string): BalanceAnimo {
-  const v = valenciaDe(emocion);
+export function balanceDeValencia(v: number): BalanceAnimo {
   if (v <= 2) return "bajo";
   if (v >= 4) return "alto";
   return "neutral";
 }
+
+export function balanceDe(emocion: string): BalanceAnimo {
+  return balanceDeValencia(valenciaDe(emocion));
+}
+
+/**
+ * Escala de 5 niveles para el auto-registro directo ("¿cómo te sientes
+ * hoy?", ver RegistroAnimoAbuelo.tsx) — a diferencia del vocabulario de
+ * arriba (lo que Grillo infiere de una charla), esto es lo que la persona
+ * elige ella misma. Colores en degradé propio de Grillo (clay → sand →
+ * gold), no un semáforo rojo-verde genérico.
+ */
+export const NIVELES_ANIMO = [
+  { valencia: 1, etiqueta: "Terrible", texto: "text-clay-600", fondo: "bg-clay-500" },
+  { valencia: 2, etiqueta: "Mal", texto: "text-clay-500", fondo: "bg-clay-400" },
+  { valencia: 3, etiqueta: "Regular", texto: "text-sand-700", fondo: "bg-sand-500" },
+  { valencia: 4, etiqueta: "Bien", texto: "text-gold-600", fondo: "bg-gold-400" },
+  { valencia: 5, etiqueta: "Excelente", texto: "text-gold-600", fondo: "bg-gold-600" },
+] as const;

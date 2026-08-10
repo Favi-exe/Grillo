@@ -8,6 +8,7 @@ import type {
   Conversacion,
   AlertaEmergencia,
   AlertaAnimo,
+  RegistroAnimo,
   AbueloDispositivo,
 } from "@/lib/types";
 
@@ -237,6 +238,31 @@ export const supabaseStore = {
       .order("fecha", { ascending: false });
     if (error) throw error;
     return data as AlertaAnimo[];
+  },
+
+  async crearRegistroAnimo(abueloId: string, valencia: number): Promise<RegistroAnimo> {
+    const nuevo = {
+      id: randomUUID(),
+      abuelo_id: abueloId,
+      valencia,
+      fecha: new Date().toISOString(),
+    };
+    const { data, error } = await getSupabaseClient()
+      .from("registros_animo")
+      .insert(nuevo)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as RegistroAnimo;
+  },
+  async listRegistrosAnimo(abueloId: string): Promise<RegistroAnimo[]> {
+    const { data, error } = await getSupabaseClient()
+      .from("registros_animo")
+      .select("*")
+      .eq("abuelo_id", abueloId)
+      .order("fecha", { ascending: false });
+    if (error) throw error;
+    return data as RegistroAnimo[];
   },
 
   async crearDispositivo(input: {

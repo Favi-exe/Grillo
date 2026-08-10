@@ -3,33 +3,39 @@
 import { memo, useEffect, useMemo, useState } from "react";
 import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
 import type { Memoria } from "@/lib/types";
-import { HeartIcon, PeopleIcon } from "@/components/icons";
+import { HeartIcon, PeopleIcon, CaraAltaIcon, CaraNeutralIcon, CaraBajaIcon } from "@/components/icons";
+import { balanceDe, etiquetaDe } from "@/lib/emociones";
 
 const PAGINA = 6;
 
-const EMOCION_ESTILO: Record<string, string> = {
-  nostalgia: "bg-ember-100 text-ember-700",
-  alegria: "bg-gold-400/25 text-gold-600",
-  "alegría": "bg-gold-400/25 text-gold-600",
-  orgullo: "bg-dusk-100 text-dusk-700",
-  tristeza: "bg-sand-300 text-sand-800",
-  amor: "bg-clay-400/20 text-clay-600",
-  neutral: "bg-sand-200 text-sand-800",
-};
+const ESTILO_BALANCE = {
+  alto: { Icono: CaraAltaIcon, texto: "text-gold-600", fondo: "bg-gold-400/20" },
+  neutral: { Icono: CaraNeutralIcon, texto: "text-sand-700", fondo: "bg-sand-300" },
+  bajo: { Icono: CaraBajaIcon, texto: "text-clay-600", fondo: "bg-clay-400/20" },
+} as const;
 
-function estiloEmocion(emocion: string): string {
-  return EMOCION_ESTILO[emocion.toLowerCase()] ?? "bg-sand-200 text-sand-800";
+function fechaLegible(iso: string): string {
+  const texto = new Date(iso).toLocaleDateString("es-419", { day: "numeric", month: "long" });
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
 const MemoriaCard = memo(function MemoriaCard({ m }: { m: Memoria }) {
+  const { Icono, texto, fondo } = ESTILO_BALANCE[balanceDe(m.emocion_detectada)];
   return (
     <li className="border border-sand-300 rounded-3xl p-4 bg-sand-50/60 animate-pop-in">
+      <div className="flex items-center gap-3 mb-3">
+        <span className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center ${fondo} ${texto}`}>
+          <Icono className="w-6 h-6" />
+        </span>
+        <div className="min-w-0">
+          <p className={`font-heading font-semibold ${texto}`}>{etiquetaDe(m.emocion_detectada)}</p>
+          <p className="text-sm text-sand-600">{fechaLegible(m.fecha)}</p>
+        </div>
+      </div>
+
       <div className="flex items-center gap-2 mb-2 flex-wrap">
         <span className="text-sm px-2.5 py-1 rounded-full bg-dusk-100 text-dusk-700 font-medium">
           {m.tema}
-        </span>
-        <span className={`text-sm px-2.5 py-1 rounded-full font-medium ${estiloEmocion(m.emocion_detectada)}`}>
-          {m.emocion_detectada}
         </span>
         {m.personas_mencionadas?.map((p) => (
           <span
@@ -40,10 +46,8 @@ const MemoriaCard = memo(function MemoriaCard({ m }: { m: Memoria }) {
             {p}
           </span>
         ))}
-        <span className="text-sm text-sand-600 ml-auto">
-          {new Date(m.fecha).toLocaleDateString("es-419")}
-        </span>
       </div>
+
       <p className="text-lg text-sand-900 leading-relaxed">{m.resumen}</p>
     </li>
   );

@@ -235,6 +235,63 @@ export function EyeOffIcon(props: IconProps) {
   );
 }
 
+export function CaraAltaIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="8.5" cy="10" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15.5" cy="10" r="1" fill="currentColor" stroke="none" />
+      <path d="M8 14.3c1.2 1.3 2.6 2 4 2s2.8-.7 4-2" />
+    </Base>
+  );
+}
+
+export function CaraNeutralIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="8.5" cy="10" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15.5" cy="10" r="1" fill="currentColor" stroke="none" />
+      <line x1="8.5" y1="15" x2="15.5" y2="15" />
+    </Base>
+  );
+}
+
+export function CaraBajaIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="8.5" cy="10" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15.5" cy="10" r="1" fill="currentColor" stroke="none" />
+      <path d="M8 16.3c1.2-1.3 2.6-2 4-2s2.8.7 4 2" />
+    </Base>
+  );
+}
+
+export function CaraMuyBajaIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M7.2 8.7 9.7 9.6" />
+      <path d="M16.8 8.7 14.3 9.6" />
+      <circle cx="8.5" cy="10.8" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15.5" cy="10.8" r="1" fill="currentColor" stroke="none" />
+      <path d="M8 17c1.2-1.5 2.6-2.3 4-2.3s2.8.8 4 2.3" />
+    </Base>
+  );
+}
+
+export function CaraBuenaIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="8.5" cy="10" r="1" fill="currentColor" stroke="none" />
+      <circle cx="15.5" cy="10" r="1" fill="currentColor" stroke="none" />
+      <path d="M8.5 14.2c1 1 2.2 1.5 3.5 1.5s2.5-.5 3.5-1.5" />
+    </Base>
+  );
+}
+
 export function SearchIcon(props: IconProps) {
   return (
     <Base {...props}>

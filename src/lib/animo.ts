@@ -1,7 +1,7 @@
 import { listMemorias, listFamiliaresDeAbuelo, crearAlertaAnimo, listAlertasAnimo } from "@/lib/db";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/db/supabaseClient";
 import { enviarEmail } from "@/lib/notify/email";
-import { valenciaDe } from "@/lib/emociones";
+import { obtenerPuntosAnimo } from "@/lib/animoDatos";
 import type { Memoria } from "@/lib/types";
 import type Anthropic from "@anthropic-ai/sdk";
 
@@ -13,7 +13,7 @@ import type Anthropic from "@anthropic-ai/sdk";
  */
 
 const DIAS_VENTANA = 4;
-const MIN_MEMORIAS_PARA_PATRON = 3;
+const MIN_PUNTOS_PARA_PATRON = 3;
 const VALENCIA_PREOCUPANTE = 2; // promedio <= 2 → tristeza/soledad/preocupación sostenida
 const HORAS_ENTRE_AVISOS = 48; // no repetir el mismo aviso todos los días
 
@@ -28,13 +28,20 @@ export async function chequearYAvisarAnimo(abueloId: string, nombreAbuelo: strin
   }
 
   const desde = new Date(Date.now() - DIAS_VENTANA * 24 * 60 * 60 * 1000);
+  // Combina lo que Grillo infirió de la charla con lo que la persona marcó
+  // ella misma en "¿cómo te sientes hoy?" — cualquiera de las dos, o las
+  // dos juntas, puede formar el patrón.
+  const puntos = await obtenerPuntosAnimo(abueloId, desde);
+  if (puntos.length < MIN_PUNTOS_PARA_PATRON) return;
+
+  const promedio = puntos.reduce((suma, p) => suma + p.valencia, 0) / puntos.length;
+  if (promedio > VALENCIA_PREOCUPANTE) return;
+
+  // El resumen que le llega a la familia se arma solo con las memorias
+  // (tienen texto narrativo) — un registro directo no cuenta una historia,
+  // solo confirma el patrón numérico.
   const memorias = await listMemorias(abueloId);
   const recientes = memorias.filter((m) => new Date(m.fecha) >= desde);
-  if (recientes.length < MIN_MEMORIAS_PARA_PATRON) return;
-
-  const promedio =
-    recientes.reduce((suma, m) => suma + valenciaDe(m.emocion_detectada), 0) / recientes.length;
-  if (promedio > VALENCIA_PREOCUPANTE) return;
 
   const resumen = await generarResumenAnimo(nombreAbuelo, recientes);
   await crearAlertaAnimo(abueloId, resumen);
@@ -43,6 +50,10 @@ export async function chequearYAvisarAnimo(abueloId: string, nombreAbuelo: strin
 
 async function generarResumenAnimo(nombreAbuelo: string, recientes: Memoria[]): Promise<string> {
   const fallback = `${nombreAbuelo} viene con el ánimo más bajo los últimos días. Podría ser un buen momento para llamarlo o visitarlo.`;
+  // El patrón puede salir solo de los registros directos ("¿cómo te
+  // sientes hoy?"), sin ninguna historia con texto de por medio — ahí no
+  // hay nada que resumir, el fallback ya dice lo esencial.
+  if (recientes.length === 0) return fallback;
   if (!process.env.ANTHROPIC_API_KEY) return fallback;
 
   try {

@@ -10,10 +10,11 @@ import type { Config } from "tailwindcss";
  *   clay   -> estados de alerta/emergencia (rojo cálido, no rojo de sistema frío)
  */
 const config: Config = {
-  content: [
-    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  // Todo src/, no solo app/ y components/ — clases de color que viven en
+  // src/lib (p. ej. NIVELES_ANIMO en emociones.ts) se estaban purgando en
+  // silencio por no estar en el glob, así que sus círculos salían
+  // transparentes en vez del color esperado.
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       colors: {

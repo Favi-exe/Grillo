@@ -9,6 +9,7 @@ import type {
   Conversacion,
   AlertaEmergencia,
   AlertaAnimo,
+  RegistroAnimo,
   AbueloDispositivo,
 } from "@/lib/types";
 
@@ -20,6 +21,7 @@ interface DbShape {
   conversaciones: Conversacion[];
   alertas_emergencia: AlertaEmergencia[];
   alertas_animo: AlertaAnimo[];
+  registros_animo: RegistroAnimo[];
   abuelo_dispositivos: AbueloDispositivo[];
 }
 
@@ -38,6 +40,7 @@ function vacio(): DbShape {
     conversaciones: [],
     alertas_emergencia: [],
     alertas_animo: [],
+    registros_animo: [],
     abuelo_dispositivos: [],
   };
 }
@@ -57,6 +60,7 @@ function ensureDb(): DbShape {
     // Compatibilidad con db.json generados antes de sumar estas colecciones.
     if (!parsed.alertas_emergencia) parsed.alertas_emergencia = [];
     if (!parsed.alertas_animo) parsed.alertas_animo = [];
+    if (!parsed.registros_animo) parsed.registros_animo = [];
     if (!parsed.abuelo_dispositivos) parsed.abuelo_dispositivos = [];
     return parsed as DbShape;
   } catch {
@@ -227,6 +231,25 @@ export const localStore = {
   listAlertasAnimo(abueloId: string): AlertaAnimo[] {
     return ensureDb()
       .alertas_animo.filter((a) => a.abuelo_id === abueloId)
+      .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  },
+
+  // --- Registros directos de ánimo ("¿cómo te sientes hoy?") ---
+  crearRegistroAnimo(abueloId: string, valencia: number): RegistroAnimo {
+    const db = ensureDb();
+    const nuevo: RegistroAnimo = {
+      id: randomUUID(),
+      abuelo_id: abueloId,
+      valencia,
+      fecha: new Date().toISOString(),
+    };
+    db.registros_animo.push(nuevo);
+    save(db);
+    return nuevo;
+  },
+  listRegistrosAnimo(abueloId: string): RegistroAnimo[] {
+    return ensureDb()
+      .registros_animo.filter((r) => r.abuelo_id === abueloId)
       .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
   },
 
