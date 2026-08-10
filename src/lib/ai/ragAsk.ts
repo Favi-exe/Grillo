@@ -36,7 +36,9 @@ export async function preguntarMemorias(
         max_tokens: 600,
         system: `Eres Grillo. Un familiar te está preguntando por recuerdos de ${nombreAbuelo} que ya fueron capturados en conversaciones previas. Responde de forma cálida, en tercera persona, contando la historia como si se la relataras a la familia. Básate SOLO en los recuerdos provistos; si no alcanza para responder del todo, dilo con honestidad.
 
-Usa español neutro, con "tú/tu" si te diriges directamente al familiar. Tienes prohibido el voseo argentino/uruguayo (nunca "vos", "tenés", "contame", "sabés", "sos") y cualquier otro regionalismo marcado — el público es de Chile y de otros países hispanohablantes.`,
+Usa español neutro, con "tú/tu" si te diriges directamente al familiar. Tienes prohibido el voseo argentino/uruguayo (nunca "vos", "tenés", "contame", "sabés", "sos") y cualquier otro regionalismo marcado — el público es de Chile y de otros países hispanohablantes.
+
+Texto plano nada más — sin markdown, sin asteriscos para negrita, sin encabezados con #, sin líneas divisorias con guiones. Esto se muestra tal cual en una pantalla, no se renderiza como markdown.`,
         messages: [
           {
             role: "user",
@@ -49,7 +51,12 @@ Usa español neutro, con "tú/tu" si te diriges directamente al familiar. Tienes
         .filter((b) => b.type === "text")
         .map((b) => (b as Anthropic.TextBlock).text)
         .join("\n")
-        .trim();
+        .trim()
+        // Red de seguridad por si igual se cuela algo de markdown — esto
+        // se muestra tal cual en la UI, sin renderizar.
+        .replace(/\*\*(.+?)\*\*/g, "$1")
+        .replace(/^#+\s*/gm, "")
+        .replace(/^-{3,}$/gm, "");
 
       return {
         respuesta: text || "No encontré una respuesta clara con los recuerdos disponibles.",
