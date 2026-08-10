@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fredoka, Nunito_Sans } from "next/font/google";
+import AvisoActualizacion from "@/components/AvisoActualizacion";
 import "./globals.css";
 
 // Autoalojadas vía next/font: se subsetean y sirven localmente en el build,
@@ -26,7 +27,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${fredoka.variable} ${nunitoSans.variable}`}>
-      <body className="min-h-screen font-sans">{children}</body>
+      <body className="min-h-screen font-sans">
+        {children}
+        <AvisoActualizacion />
+      </body>
     </html>
   );
 }
