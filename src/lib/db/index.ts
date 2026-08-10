@@ -104,6 +104,11 @@ export async function listConversaciones(abueloId: string): Promise<Conversacion
     ? supabaseStore.listConversaciones(abueloId)
     : localStore.listConversaciones(abueloId);
 }
+export async function contarConversacionesDesde(abueloId: string, desde: string): Promise<number> {
+  return usandoSupabase()
+    ? supabaseStore.contarConversacionesDesde(abueloId, desde)
+    : localStore.contarConversacionesDesde(abueloId, desde);
+}
 
 export async function crearAlertaEmergencia(abueloId: string): Promise<AlertaEmergencia> {
   return usandoSupabase()

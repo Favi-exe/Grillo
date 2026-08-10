@@ -12,7 +12,7 @@ export function isClaudeConfigured(): boolean {
 export interface ChatResult {
   reply: string;
   toolCalls: ToolExecutionResult[];
-  fuente: "mock" | "real";
+  fuente: "mock" | "real" | "limite";
 }
 
 export async function chatWithGrillo(
@@ -77,6 +77,8 @@ async function chatReal(
 
   const toolCalls: ToolExecutionResult[] = [];
   let finalText = "";
+  let tokensEntrada = 0;
+  let tokensSalida = 0;
 
   for (let turn = 0; turn < 5; turn++) {
     const response = await anthropic.messages.create({
@@ -86,6 +88,8 @@ async function chatReal(
       messages,
       tools: GRILLO_TOOLS,
     });
+    tokensEntrada += response.usage.input_tokens;
+    tokensSalida += response.usage.output_tokens;
 
     const textBlocks = response.content.filter((b) => b.type === "text") as Anthropic.TextBlock[];
     const texto = textBlocks.map((b) => b.text).join("\n").trim();
@@ -133,12 +137,21 @@ async function chatReal(
       // Sin `tools`: no puede volver a esconderse detrás de otro tool_use,
       // tiene que contestar en texto sí o sí.
     });
+    tokensEntrada += respuestaForzada.usage.input_tokens;
+    tokensSalida += respuestaForzada.usage.output_tokens;
     finalText = respuestaForzada.content
       .filter((b) => b.type === "text")
       .map((b) => (b as Anthropic.TextBlock).text)
       .join("\n")
       .trim();
   }
+
+  // Visibilidad de costo real (no hay dashboard propio todavía): queda en
+  // los logs del servidor para poder mirar el consumo real por conversación
+  // sin tener que adivinar a partir de la cantidad de mensajes.
+  console.log(
+    `[claude] abuelo=${ctx.abueloId} tokens_entrada=${tokensEntrada} tokens_salida=${tokensSalida}`
+  );
 
   return { reply: finalText || "Perdón, ¿me repites? Me quedé pensando.", toolCalls, fuente: "real" };
 }

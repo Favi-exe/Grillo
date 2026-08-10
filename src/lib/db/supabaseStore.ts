@@ -167,6 +167,15 @@ export const supabaseStore = {
     if (error) throw error;
     return data as Conversacion[];
   },
+  async contarConversacionesDesde(abueloId: string, desde: string): Promise<number> {
+    const { count, error } = await getSupabaseClient()
+      .from("conversaciones")
+      .select("id", { count: "exact", head: true })
+      .eq("abuelo_id", abueloId)
+      .gte("fecha", desde);
+    if (error) throw error;
+    return count ?? 0;
+  },
 
   async crearAlertaEmergencia(abueloId: string): Promise<AlertaEmergencia> {
     const nueva = {

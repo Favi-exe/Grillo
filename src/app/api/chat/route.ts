@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chatWithGrillo } from "@/lib/ai/claude";
-import { getAbuelo, createConversacion } from "@/lib/db";
+import { chatWithGrillo, type ChatResult } from "@/lib/ai/claude";
+import { getAbuelo, createConversacion, contarConversacionesDesde } from "@/lib/db";
 import { AuthError, requireAbueloAccess } from "@/lib/auth/server";
 import type { ChatMessage } from "@/lib/types";
+
+// Techo de mensajes por persona mayor en una ventana móvil de 24hs — para no
+// quemar créditos de la API de Claude si algo queda repitiéndose o alguien
+// abusa del chat. Configurable con LIMITE_MENSAJES_DIARIOS; 60 por defecto
+// (generoso para uso real, pero corta un loop o un abuso antes de que
+// duela la factura).
+const LIMITE_MENSAJES_24HS = Number(process.env.LIMITE_MENSAJES_DIARIOS ?? 60);
+const VENTANA_LIMITE_MS = 24 * 60 * 60 * 1000;
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,15 +27,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Persona mayor no encontrada" }, { status: 404 });
     }
 
+    const desde = new Date(Date.now() - VENTANA_LIMITE_MS).toISOString();
+    const usoReciente = await contarConversacionesDesde(abueloId, desde);
+    const alcanzoElLimite = usoReciente >= LIMITE_MENSAJES_24HS;
+
     // No hay cuenta de auth para el abuelo — "creado_por" usa su propio
     // abuelo_id como sentinel de "esto lo pidió él mismo por voz".
-    const result = await chatWithGrillo(
-      { abueloId, usuarioId: abueloId },
-      abuelo.nombre,
-      abuelo.notas_generales,
-      historia ?? [],
-      mensaje
-    );
+    const result: ChatResult = alcanzoElLimite
+      ? {
+          reply: "Hoy ya charlamos bastante. Descansemos un poco y seguimos mañana, ¿te parece?",
+          toolCalls: [],
+          fuente: "limite",
+        }
+      : await chatWithGrillo(
+          { abueloId, usuarioId: abueloId },
+          abuelo.nombre,
+          abuelo.notas_generales,
+          historia ?? [],
+          mensaje
+        );
 
     const nuevaHistoria: ChatMessage[] = [
       ...(historia ?? []),
@@ -35,11 +53,15 @@ export async function POST(req: NextRequest) {
       { role: "assistant", content: result.reply, timestamp: new Date().toISOString() },
     ];
 
-    createConversacion({
-      abuelo_id: abueloId,
-      fecha: new Date().toISOString(),
-      transcripcion_completa: nuevaHistoria,
-    }).catch((err) => console.error("[chat] no se pudo persistir conversación:", err));
+    // Una respuesta de "límite alcanzado" no cuenta como uso nuevo — si
+    // se guardara, cada intento posterior seguiría empujando la ventana.
+    if (!alcanzoElLimite) {
+      createConversacion({
+        abuelo_id: abueloId,
+        fecha: new Date().toISOString(),
+        transcripcion_completa: nuevaHistoria,
+      }).catch((err) => console.error("[chat] no se pudo persistir conversación:", err));
+    }
 
     return NextResponse.json({
       reply: result.reply,

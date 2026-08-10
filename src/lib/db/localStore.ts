@@ -169,6 +169,11 @@ export const localStore = {
   listConversaciones(abueloId: string): Conversacion[] {
     return ensureDb().conversaciones.filter((c) => c.abuelo_id === abueloId);
   },
+  contarConversacionesDesde(abueloId: string, desde: string): number {
+    return ensureDb().conversaciones.filter(
+      (c) => c.abuelo_id === abueloId && c.fecha >= desde
+    ).length;
+  },
 
   // --- Alertas de emergencia ---
   crearAlertaEmergencia(abueloId: string): AlertaEmergencia {
