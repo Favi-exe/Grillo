@@ -67,23 +67,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const usuario = await createUsuario({
-      nombre: nombre.trim(),
-      rol: "abuelo",
-      relacion_con_abuelo: null,
-      abuelo_id: null,
-      auth_user_id: creado.user.id,
-    });
+    try {
+      const usuario = await createUsuario({
+        nombre: nombre.trim(),
+        rol: "abuelo",
+        relacion_con_abuelo: null,
+        abuelo_id: null,
+        auth_user_id: creado.user.id,
+      });
 
-    const abuelo = await createAbuelo({
-      nombre: nombre.trim(),
-      fecha_nacimiento: null,
-      notas_generales: null,
-    });
+      const abuelo = await createAbuelo({
+        nombre: nombre.trim(),
+        fecha_nacimiento: null,
+        notas_generales: null,
+      });
 
-    await updateUsuario(usuario.id, { abuelo_id: abuelo.id });
+      await updateUsuario(usuario.id, { abuelo_id: abuelo.id });
 
-    return NextResponse.json({ email: email.trim(), password, abuelo }, { status: 201 });
+      return NextResponse.json({ email: email.trim(), password, abuelo }, { status: 201 });
+    } catch (errorPerfil) {
+      // Si el perfil (usuarios/abuelos) no se termina de crear, no dejamos
+      // un usuario de Auth huérfano: sin esto, el correo queda con login
+      // válido pero sin perfil (justo el fallo que reportó Cecilia), y
+      // Supabase ya no deja recrearlo porque "ya existe" — quedaría
+      // atrapado sin poder reintentar. Revertimos el usuario de Auth para
+      // que la persona pueda volver a intentarlo con el mismo correo.
+      console.error(
+        "[api/registro-mayor] fallo creando el perfil, revirtiendo el usuario de auth:",
+        errorPerfil
+      );
+      await getSupabaseClient()
+        .auth.admin.deleteUser(creado.user.id)
+        .catch((e) =>
+          console.error("[api/registro-mayor] no se pudo revertir el usuario de auth:", e)
+        );
+      return NextResponse.json(
+        { error: "No pudimos terminar de crear la cuenta. Probemos de nuevo." },
+        { status: 500 }
+      );
+    }
   } catch (err) {
     console.error("[api/registro-mayor]", err);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
