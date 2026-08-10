@@ -3,6 +3,35 @@
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
 
+## Sesión 11 — Límite de uso diario para no quemar créditos de Claude
+
+Preocupación real: sin ningún control, un loop o un uso intensivo del chat
+puede consumir crédito de la API de Anthropic sin aviso. Se agregó:
+
+1. **Techo de mensajes por persona mayor** en una ventana móvil de 24hs
+   (`LIMITE_MENSAJES_DIARIOS`, default 60). Se cuenta con
+   `contarConversacionesDesde` (un `select count` liviano sobre
+   `conversaciones`, sin traer las transcripciones completas). Al llegar al
+   techo, `/api/chat` no llama más a Claude — responde con un mensaje fijo
+   ("Hoy ya charlamos bastante...") sin gastar tokens, y esa respuesta no
+   cuenta como uso nuevo (si contara, seguiría empujando la ventana).
+2. **Logueo de tokens reales** (`tokens_entrada`/`tokens_salida` de la
+   respuesta de Anthropic) por cada conversación completa, para tener
+   visibilidad del consumo real en los logs del servidor en vez de estimarlo
+   a partir de la cantidad de mensajes.
+
+**Verificado en vivo**: se bajó el límite a 2 temporalmente (solo en
+`.env.local`, revertido después), se mandaron 3 mensajes reales como
+Manuel Silva — los primeros dos generaron respuesta real de Claude (con
+tokens logueados), el tercero se cortó localmente sin tocar la API. Se
+limpiaron las conversaciones de prueba al terminar.
+
+**Pendiente**: estos límites no están todavía atados a los planes de
+suscripción (Básico/Cada Día/Familia Grande) que se conversaron con
+Cecilia — hoy es un único techo parejo para todas las cuentas. Cuando haya
+sistema de pagos, el límite debería leer el plan de cada familia en vez de
+una constante fija.
+
 ## Sesión 10 — Notificación real de emergencia, dispositivos vinculados, chat sin doble scroll, anti-duplicado de historias
 
 Tras una revisión honesta de la UI y las funcionalidades pendientes, se
