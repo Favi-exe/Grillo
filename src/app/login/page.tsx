@@ -63,7 +63,7 @@ export default function LoginPage() {
       <div className="opacity-0 animate-fade-rise stagger-1 flex gap-2 bg-white rounded-full p-1 shadow-warm-sm">
         <button
           onClick={() => setModo("familiar")}
-          className={`px-5 py-2.5 rounded-full font-semibold transition-colors ${
+          className={`px-5 py-2.5 rounded-full font-semibold whitespace-nowrap transition-colors ${
             modo === "familiar" ? "bg-ember-600 text-white" : "text-sand-700"
           }`}
         >
@@ -71,7 +71,7 @@ export default function LoginPage() {
         </button>
         <button
           onClick={() => setModo("abuelo")}
-          className={`px-5 py-2.5 rounded-full font-semibold transition-colors ${
+          className={`px-5 py-2.5 rounded-full font-semibold whitespace-nowrap transition-colors ${
             modo === "abuelo" ? "bg-dusk-700 text-white" : "text-sand-700"
           }`}
         >

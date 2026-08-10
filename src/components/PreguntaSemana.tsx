@@ -83,7 +83,7 @@ export default function PreguntaSemana() {
           onChange={(e) => setRespuesta(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && enviar()}
           placeholder="Escribe o toca el micrófono para responder..."
-          className="flex-1 min-h-[52px] rounded-full border-2 border-sand-400 bg-white px-5 text-lg text-sand-900 placeholder:text-sand-600 focus:outline-none focus:ring-4 focus:ring-ember-200 focus:border-ember-400"
+          className="flex-1 min-w-0 min-h-[52px] rounded-full border-2 border-sand-400 bg-white px-5 text-lg text-sand-900 placeholder:text-sand-600 focus:outline-none focus:ring-4 focus:ring-ember-200 focus:border-ember-400"
         />
         {sttDisponible && (
           <button

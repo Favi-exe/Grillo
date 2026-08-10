@@ -48,7 +48,7 @@ export default function PreguntaMemoria({ abueloNombre }: { abueloNombre: string
           value={pregunta}
           onChange={(e) => setPregunta(e.target.value)}
           placeholder="Escribe tu pregunta..."
-          className="flex-1 min-h-[52px] border-0 rounded-2xl px-4 text-lg bg-white/95 text-sand-900 placeholder:text-sand-600 focus:outline-none focus:ring-4 focus:ring-white/40"
+          className="flex-1 min-w-0 min-h-[52px] border-0 rounded-2xl px-4 text-lg bg-white/95 text-sand-900 placeholder:text-sand-600 focus:outline-none focus:ring-4 focus:ring-white/40"
         />
         <button
           type="submit"
