@@ -3,6 +3,50 @@
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
 
+## Sesión 10 — Notificación real de emergencia, dispositivos vinculados, chat sin doble scroll, anti-duplicado de historias
+
+Tras una revisión honesta de la UI y las funcionalidades pendientes, se
+implementaron las cuatro mejoras recomendadas:
+
+1. **Notificación real de emergencia**: el mayor hallazgo de la revisión —
+   "Ya avisé a tu familia" era mentira en la práctica, porque solo
+   escribía una fila en la base y la familia se enteraba únicamente si
+   tenía la vista `/familia` abierta (poll cada 8s). Ahora `/api/emergencia`
+   además le manda un correo a cada familiar vinculado, usando un módulo
+   nuevo ([email.ts](src/lib/notify/email.ts)) con el mismo patrón
+   real/mock del resto del proyecto: si hay `RESEND_API_KEY`, manda el
+   correo de verdad vía Resend; si no, lo loguea en la consola del
+   servidor y la alerta se sigue guardando igual. Verificado en vivo: al
+   disparar la alerta como Rosa, el log del servidor mostró el correo
+   dirigido a `pedro.gonzalez@example.com` (su familiar vinculado real,
+   resuelto vía `auth.admin.getUserById`).
+2. **Dispositivos vinculados**: nueva sección en `/familia`
+   ([DispositivosVinculados.tsx](src/components/DispositivosVinculados.tsx))
+   que lista los dispositivos de la persona mayor y permite revocarlos
+   — usa las rutas `GET`/`DELETE /api/dispositivos` que ya existían pero
+   no tenían UI. Verificado: se vinculó un dispositivo de prueba, apareció
+   en la lista, se revocó, y se confirmó en la base que la fila
+   desapareció.
+3. **Chat sin doble scroll**: `VoiceChat.tsx` tenía un contenedor interno
+   con su propio scroll (`max-h-[42vh] overflow-y-auto`), separado del
+   scroll de la página — confuso en mobile, sobre todo para el público de
+   Grillo. Se sacó el scroll interno; ahora el cuadro de charla crece con
+   la página y hace `scrollIntoView` al último mensaje.
+4. **Anti-duplicado de historias**: además del fix de la Sesión 9 (la
+   causa raíz del duplicado), se agregó una red de seguridad extra en
+   `guardar_memoria` ([executor.ts](src/lib/tools/executor.ts)): si el
+   resumen nuevo tiene una similitud de texto alta (≥75%, por solapamiento
+   de palabras) con una memoria guardada en las últimas 6 horas, no la
+   vuelve a guardar. Verificado en vivo: se le contó dos veces la misma
+   historia a Manuel Silva y solo quedó una fila en `memorias`.
+
+De paso se encontró y sacó voseo que había quedado en `.env.example` y
+`README.md` — las barridas de las Sesiones 4 y 8 solo cubrían `src/`.
+
+`tsc` y `eslint` limpios en todos los archivos tocados. Se borraron todos
+los datos de prueba generados durante la verificación (memorias,
+conversaciones, alerta de emergencia, dispositivo, vectores de Pinecone).
+
 ## Sesión 9 — Voz de ElevenLabs conectada + español neutro en las respuestas de la IA (no solo en la UI) + conciencia horaria
 
 **Voz real de ElevenLabs**: la voice ID que estaba configurada
