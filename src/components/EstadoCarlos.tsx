@@ -34,8 +34,8 @@ export default function EstadoCarlos({ nombre }: { nombre: string }) {
   return (
     <p className="text-base text-sand-600">
       {ultima
-        ? `${nombre} habló con Grillo por última vez ${formatoRelativo(ultima.fecha)}`
-        : `${nombre} todavía no charló con Grillo`}
+        ? `${nombre} habló con Griyo por última vez ${formatoRelativo(ultima.fecha)}`
+        : `${nombre} todavía no charló con Griyo`}
     </p>
   );
 }

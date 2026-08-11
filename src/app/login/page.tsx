@@ -141,7 +141,7 @@ export default function LoginPage() {
               {!mostrarLoginMayor ? (
                 <div>
                   <p className="text-sand-900 text-xl font-semibold mb-1">
-                    ¿Te gustaría la compañía y ayuda de Grillo?
+                    ¿Te gustaría la compañía y ayuda de Griyo?
                   </p>
                   <p className="text-sand-700 mb-4">
                     Crea tu cuenta en unos pasos sencillos — yo mismo te voy guiando.

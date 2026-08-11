@@ -25,13 +25,13 @@ export default function LandingPage() {
         <h1
           className="font-heading text-5xl font-semibold text-dusk-800 mb-3 opacity-0 animate-fade-rise stagger-1"
         >
-          Grillo
+          Griyo
         </h1>
 
         <p
           className="text-xl text-sand-800 max-w-md mb-10 leading-relaxed opacity-0 animate-fade-rise stagger-2"
         >
-          Tu compañía de cada día. Grillo conversa, acompaña y guarda con
+          Tu compañía de cada día. Griyo conversa, acompaña y guarda con
           cariño las historias de tu vida para que tu familia las pueda
           atesorar.
         </p>

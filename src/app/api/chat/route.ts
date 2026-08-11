@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chatWithGrillo, type ChatResult } from "@/lib/ai/claude";
+import { chatWithGriyo, type ChatResult } from "@/lib/ai/claude";
 import { getAbuelo, createConversacion, contarConversacionesDesde } from "@/lib/db";
 import { AuthError, requireAbueloAccess } from "@/lib/auth/server";
 import { chequearYAvisarAnimo } from "@/lib/animo";
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
           toolCalls: [],
           fuente: "limite",
         }
-      : await chatWithGrillo(
+      : await chatWithGriyo(
           { abueloId, usuarioId: abueloId },
           abuelo.nombre,
           abuelo.notas_generales,

@@ -4,7 +4,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 
 /**
  * Arma el contenido del libro de "Legado Vivo": las historias reales que
- * Grillo fue guardando, agrupadas por tema en capítulos. Cada historia se
+ * Griyo fue guardando, agrupadas por tema en capítulos. Cada historia se
  * muestra tal como se capturó — Claude solo escribe una introducción breve
  * por capítulo, nunca reescribe ni inventa las historias en sí. Disponible
  * en cualquier momento (no solo tras un fallecimiento) — por eso es un
@@ -71,7 +71,7 @@ async function generarIntroducciones(
     const response = await anthropic.messages.create({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6",
       max_tokens: 900,
-      system: `Eres Grillo. A partir de las historias reales que compartió ${nombreAbuelo} (agrupadas por tema abajo), vas a escribir una introducción breve y cálida (2 a 3 frases) para cada tema, para abrir esa sección de un pequeño libro de recuerdos que va a guardar su familia. Básate SOLO en lo que aparece abajo — nunca inventes nombres, fechas ni detalles que no estén ahí. Tono cercano y genuino, nunca cursi ni forzado, español neutro sin voseo, texto plano sin markdown. Responde con EXACTAMENTE ${temasEnOrden.length} introducciones, en el mismo orden en que aparecen los temas abajo, cada una separada por una línea con solo "---" (tres guiones) y nada más — sin repetir el nombre del tema, sin numerarlas, solo el texto de cada introducción.`,
+      system: `Eres Griyo. A partir de las historias reales que compartió ${nombreAbuelo} (agrupadas por tema abajo), vas a escribir una introducción breve y cálida (2 a 3 frases) para cada tema, para abrir esa sección de un pequeño libro de recuerdos que va a guardar su familia. Básate SOLO en lo que aparece abajo — nunca inventes nombres, fechas ni detalles que no estén ahí. Tono cercano y genuino, nunca cursi ni forzado, español neutro sin voseo, texto plano sin markdown. Responde con EXACTAMENTE ${temasEnOrden.length} introducciones, en el mismo orden en que aparecen los temas abajo, cada una separada por una línea con solo "---" (tres guiones) y nada más — sin repetir el nombre del tema, sin numerarlas, solo el texto de cada introducción.`,
       messages: [{ role: "user", content: bloques }],
     });
 

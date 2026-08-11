@@ -80,7 +80,7 @@ export default function InvitacionPage() {
             <h1 className="font-heading text-2xl font-semibold text-sand-900 mb-1">
               {abueloNombre
                 ? `Te invitaron a acompañar a ${abueloNombre}`
-                : "Te invitaron a Grillo"}
+                : "Te invitaron a Griyo"}
             </h1>
             <p className="text-sand-700 mb-2">
               Completa estos datos para terminar de crear tu cuenta.

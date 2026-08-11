@@ -1,6 +1,6 @@
 /**
  * Envío de emails transaccionales (alertas de emergencia, etc.), con el
- * mismo patrón real/mock que el resto de los servicios externos de Grillo:
+ * mismo patrón real/mock que el resto de los servicios externos de Griyo:
  * si no hay RESEND_API_KEY, cae a un mock que solo loguea — la app sigue
  * funcionando sin la key, simplemente no manda el correo de verdad.
  */
@@ -32,7 +32,7 @@ export async function enviarEmail(params: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: process.env.RESEND_FROM_EMAIL || "Grillo <onboarding@resend.dev>",
+        from: process.env.RESEND_FROM_EMAIL || "Griyo <onboarding@resend.dev>",
         to: params.to,
         subject: params.subject,
         html: params.html,

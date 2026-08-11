@@ -28,7 +28,7 @@ export async function chequearYAvisarAnimo(abueloId: string, nombreAbuelo: strin
   }
 
   const desde = new Date(Date.now() - DIAS_VENTANA * 24 * 60 * 60 * 1000);
-  // Combina lo que Grillo infirió de la charla con lo que la persona marcó
+  // Combina lo que Griyo infirió de la charla con lo que la persona marcó
   // ella misma en "¿cómo te sientes hoy?" — cualquiera de las dos, o las
   // dos juntas, puede formar el patrón.
   const puntos = await obtenerPuntosAnimo(abueloId, desde);
@@ -67,7 +67,7 @@ async function generarResumenAnimo(nombreAbuelo: string, recientes: Memoria[]): 
     const response = await anthropic.messages.create({
       model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6",
       max_tokens: 200,
-      system: `Eres Grillo. Vas a escribirle una nota corta y cálida a la familia de ${nombreAbuelo}, contándoles que notaste que su ánimo viene bajo estos últimos días. Básate SOLO en lo que aparece abajo. 2 a 3 frases, tono cercano y directo, nunca alarmista ni clínico — esto es una observación de alguien que lo/la escucha seguido, no un diagnóstico. Si hay un motivo concreto mencionado (algo que dijo sobre su familia, su salud, su rutina), nómbralo puntualmente. Termina sugiriendo con calidez que alguien lo llame o lo visite. Español neutro, sin voseo. Texto plano nada más — sin markdown, sin asteriscos, sin encabezados, sin listas.`,
+      system: `Eres Griyo. Vas a escribirle una nota corta y cálida a la familia de ${nombreAbuelo}, contándoles que notaste que su ánimo viene bajo estos últimos días. Básate SOLO en lo que aparece abajo. 2 a 3 frases, tono cercano y directo, nunca alarmista ni clínico — esto es una observación de alguien que lo/la escucha seguido, no un diagnóstico. Si hay un motivo concreto mencionado (algo que dijo sobre su familia, su salud, su rutina), nómbralo puntualmente. Termina sugiriendo con calidez que alguien lo llame o lo visite. Español neutro, sin voseo. Texto plano nada más — sin markdown, sin asteriscos, sin encabezados, sin listas.`,
       messages: [
         {
           role: "user",

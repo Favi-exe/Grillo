@@ -1,4 +1,4 @@
-# PROGRESO — Grillo MVP
+# PROGRESO — Griyo MVP
 
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
@@ -6,7 +6,7 @@ aproximados (hora local de la máquina, 2026-08-06).
 ## Sesión 13 — Tarjetas de historia con carita, auto-registro diario y pregunta de la semana
 
 Seguimiento directo de la Sesión 12, con tres pedidos inspirados en apps
-de bienestar (Yana y similares) pero adaptados al modelo de Grillo (1 a 1
+de bienestar (Yana y similares) pero adaptados al modelo de Griyo (1 a 1
 con la familia, no una comunidad).
 
 1. **Tarjetas de historia rediseñadas** (`MemoriasList.tsx`): cada
@@ -16,22 +16,22 @@ con la familia, no una comunidad).
    texto sin ícono.
 2. **Auto-registro diario** (`RegistroAnimoAbuelo.tsx` +
    `registros_animo`): "¿Cómo te sientes hoy?" con 5 caritas propias de
-   Grillo (Terrible/Mal/Regular/Bien/Excelente) en degradé clay→sand→gold
+   Griyo (Terrible/Mal/Regular/Bien/Excelente) en degradé clay→sand→gold
    — deliberadamente NO un semáforo rojo-verde genérico como en las apps
    de referencia, para mantener la paleta de marca. Uno por día.
 3. **Pregunta de la semana** (`PreguntaSemana.tsx`): pregunta de
    reminiscencia que rota semanalmente de una lista curada de 12. Se
    descartó a propósito la parte de "feed social" de las apps de
-   referencia (respuestas de otros usuarios, likes, comentarios) — Grillo
+   referencia (respuestas de otros usuarios, likes, comentarios) — Griyo
    es una charla privada con la propia familia, no una comunidad, y sumar
    eso sería un producto distinto. La respuesta entra por el mismo
-   `/api/chat`, así que si vale la pena, Grillo la guarda como historia
+   `/api/chat`, así que si vale la pena, Griyo la guarda como historia
    normal (se vio en vivo: una respuesta sobre un consejo del padre quedó
    guardada con `emocion_detectada: "gratitud"`).
 
 **Los registros directos ahora alimentan la detección de ánimo bajo**
 (`lib/animoDatos.ts` combina `memorias` + `registros_animo` en una sola
-serie de puntos) — antes `chequearYAvisarAnimo` solo miraba lo que Grillo
+serie de puntos) — antes `chequearYAvisarAnimo` solo miraba lo que Griyo
 inferían de la charla; ahora un patrón puede salir también de lo que la
 persona marcó directamente. El panel familiar suma un "contador de
 estados" (las 5 caritas con la cantidad de veces que se marcó cada una).
@@ -52,7 +52,7 @@ fuentes. Datos de prueba borrados de Supabase y Pinecone al terminar.
 
 ## Sesión 12 — Detección de ánimo bajo sostenido + gráfico para la familia
 
-Pedido: que Grillo note cuando alguien "lleva un par de días triste" y le
+Pedido: que Griyo note cuando alguien "lleva un par de días triste" y le
 avise a la familia con contexto concreto (no solo "está triste"), más
 gráficos de evolución del ánimo inspirados en la app Yana.
 
@@ -65,7 +65,7 @@ graficar una evolución real en el tiempo.
 **Detección de patrón** (`src/lib/animo.ts`): tras guardar una memoria,
 si el promedio de valencia de los recuerdos de los últimos 4 días es bajo
 (≤2, o sea tristeza/soledad/preocupación sostenida) y hay al menos 3
-recuerdos en la ventana (para no disparar por un evento aislado), Grillo
+recuerdos en la ventana (para no disparar por un evento aislado), Griyo
 le pide a Claude que redacte una nota corta y concreta a partir de lo que
 la persona realmente contó, y se la manda por correo a cada familiar
 vinculado. Throttle de 48hs para no repetir el aviso todos los días.
@@ -73,17 +73,17 @@ vinculado. Throttle de 48hs para no repetir el aviso todos los días.
 **Decisión de producto, no solo técnica**: no se construyó nada parecido
 a las pantallas de "Evaluación de depresión/ansiedad/autoestima" con
 niveles de severidad que se ven en Yana — eso simularía una escala clínica
-sin validar, dando una falsa sensación de certeza médica que Grillo no
+sin validar, dando una falsa sensación de certeza médica que Griyo no
 tiene forma de respaldar (mismo principio que ya rige las reglas del
 system prompt sobre no dar diagnósticos). Se optó por observación de
 patrón + sugerencia de contacto humano.
 
 **UI nueva**: `EstadoAnimoFamiliar.tsx` en `/familia` — gráfico de línea
 SVG (sin librerías) de la evolución de los últimos 14 días, con hover, y
-una barra de distribución bajo/neutral/alto. Paleta propia de Grillo
+una barra de distribución bajo/neutral/alto. Paleta propia de Griyo
 (clay/sand/gold), no la de Yana.
 
-**Verificado en vivo, con datos reales**: se le contaron a Grillo (como
+**Verificado en vivo, con datos reales**: se le contaron a Griyo (como
 Rosa) tres historias tristes distintas en la misma sesión — la alerta se
 disparó con un resumen que mencionaba puntualmente a su esposo fallecido
 (Jorge) y el aniversario, se logueó el correo mock a Pedro, y el gráfico +
@@ -149,7 +149,7 @@ implementaron las cuatro mejoras recomendadas:
 3. **Chat sin doble scroll**: `VoiceChat.tsx` tenía un contenedor interno
    con su propio scroll (`max-h-[42vh] overflow-y-auto`), separado del
    scroll de la página — confuso en mobile, sobre todo para el público de
-   Grillo. Se sacó el scroll interno; ahora el cuadro de charla crece con
+   Griyo. Se sacó el scroll interno; ahora el cuadro de charla crece con
    la página y hace `scrollIntoView` al último mensaje.
 4. **Anti-duplicado de historias**: además del fix de la Sesión 9 (la
    causa raíz del duplicado), se agregó una red de seguridad extra en
@@ -191,7 +191,7 @@ el system prompt principal ([definitions.ts](src/lib/tools/definitions.ts))
 como en el de `preguntarMemorias` para la vista familiar
 ([ragAsk.ts](src/lib/ai/ragAsk.ts)), que tenía el mismo hueco.
 
-**De paso, conciencia horaria**: en la misma prueba, Grillo saludó como si
+**De paso, conciencia horaria**: en la misma prueba, Griyo saludó como si
 recién amaneciera de noche. Se agregó `describirMomentoActual()` en
 [claude.ts](src/lib/ai/claude.ts), que calcula día de la semana y franja
 horaria (mañana / mediodía / tarde / noche / madrugada) en huso horario
@@ -200,7 +200,7 @@ las referencias al momento del día sean coherentes con la hora real del
 usuario, no con la hora del servidor ni una suposición fija.
 
 **Verificación en la app real** (no solo con curl): login con
-`rosa.gonzalez@example.com`, mensaje "Hola Grillo, ¿cómo estás?" un jueves
+`rosa.gonzalez@example.com`, mensaje "Hola Griyo, ¿cómo estás?" un jueves
 por la noche → respuesta real: *"¡Hola, Rosa! Qué gusto que te asomes por
 aquí esta noche. Yo bien, con ganas de charlar un rato contigo. ¿Cómo
 estás tú? ¿Cómo terminó el día?"* — español neutro correcto y franja
@@ -281,13 +281,13 @@ mayor (solo ve "invitación enviada" al momento, sin historial).
 
 ## Sesión 7 — La persona mayor también puede crear su propia cuenta
 
-Hasta acá, la persona mayor solo podía usar Grillo si un familiar la daba
+Hasta acá, la persona mayor solo podía usar Griyo si un familiar la daba
 de alta primero (creaba su perfil y vinculaba el dispositivo). El usuario
 señaló un caso real importante: hay adultos mayores — por ejemplo con
-Alzheimer o problemas de memoria — para quienes Grillo es sobre todo una
+Alzheimer o problemas de memoria — para quienes Griyo es sobre todo una
 herramienta de compañía y de recordar cosas por sí misma, y no siempre va
 a haber un familiar armando la cuenta de antemano. Pidió que la persona
-mayor también pudiera registrarse sola, con a Grillo acompañándola paso a
+mayor también pudiera registrarse sola, con a Griyo acompañándola paso a
 paso (no un formulario frío), y que ese dispositivo tampoco vuelva a pedir
 login nunca — la misma barra que ya se le puso al flujo familiar-vincula-
 dispositivo.
@@ -302,7 +302,7 @@ de un token de dispositivo ajeno) y su propio perfil de abuelo autovinculado.
   (`email_confirm: true`) — se salteó a propósito la confirmación por mail
   que sí tiene el registro familiar, porque para este público es fricción
   real, no un paso menor. La contraseña la genera el servidor (palabra
-  simple + 4 dígitos, ej. `mate6700`) — Grillo la "crea", la persona no
+  simple + 4 dígitos, ej. `mate6700`) — Griyo la "crea", la persona no
   tiene que inventar ni recordar nada, se muestra una sola vez en la
   pantalla final por si algún familiar la necesita después. Crea de una
   el `usuarios` (rol `abuelo`) y su `abuelos` propio, ya vinculados entre sí.
@@ -318,11 +318,11 @@ de un token de dispositivo ajeno) y su propio perfil de abuelo autovinculado.
   de dispositivo primero y, si no hay, manda el JWT de la sesión propia —
   ningún componente del lado del abuelo (`VoiceChat`, `RecordatoriosPanel`,
   `BotonEmergencia`) tuvo que cambiar, porque ya usaban esta función.
-- **`/registro-mayor`** (nueva página): el asistente de Grillo — pantalla
+- **`/registro-mayor`** (nueva página): el asistente de Griyo — pantalla
   de bienvenida → nombre → correo → confirmar → listo, una pregunta por
   pantalla, botones grandes, y **narración por voz** en cada paso con
   `useSpeechSynthesis` (la misma síntesis de voz del navegador que ya usa
-  el chat) — Grillo literalmente habla cada instrucción, no solo la
+  el chat) — Griyo literalmente habla cada instrucción, no solo la
   escribe. Al terminar, inicia sesión en ese navegador con las credenciales
   recién creadas y redirige a `/abuelo` — de ahí en más la sesión persiste
   sola (mismo mecanismo de Supabase que ya mantenía logueado al familiar),
@@ -330,7 +330,7 @@ de un token de dispositivo ajeno) y su propio perfil de abuelo autovinculado.
 - **`/login`**: la pestaña "Soy la persona mayor" ahora primero chequea si
   ya hay acceso (token O sesión propia); si no hay ninguna, muestra el
   nuevo llamado a la acción — *"¿Te gustaría la compañía y ayuda de
-  Grillo? Creá tu cuenta en unos pasos sencillos — yo mismo te voy
+  Griyo? Creá tu cuenta en unos pasos sencillos — yo mismo te voy
   guiando."* — con un botón grande a `/registro-mayor`, y como texto
   secundario más chico la opción de que un familiar la vincule. `/abuelo`
   (la pantalla "este dispositivo no está configurado") también ofrece
@@ -436,7 +436,7 @@ huérfanas al terminar. `tsc`, `next build` y `eslint` limpios.
   para "dos abuelos" en una misma cuenta ni para invitar a otro familiar al
   mismo abuelo).
 - Los recordatorios con múltiples avisos de anticipación (24h/12h/5h antes
-  de una cita) y que Grillo pueda "llamar" a un familiar siguen anotados
+  de una cita) y que Griyo pueda "llamar" a un familiar siguen anotados
   desde la Sesión 5, sin tocar todavía.
 - Si algún día se borra una cuenta familiar, el perfil de la persona mayor
   y sus recordatorios/memorias quedan huérfanos en vez de borrarse en
@@ -458,7 +458,7 @@ con "pegar la key", si algo fallaba había que enterarse ahora, no en la demo.
   correctamente — quedó confirmado que es un id de modelo válido, no hacía
   falta cambiarlo. El chat de `/abuelo` ya corre 100% en modo real
   (`fuente: "real"`), con tool use funcionando (probado en vivo: contó una
-  anécdota de la infancia y Grillo llamó a `guardar_memoria` sola, sin
+  anécdota de la infancia y Griyo llamó a `guardar_memoria` sola, sin
   anunciarlo, tal como pide el system prompt).
 - ✅ **Pinecone**: ya existía un índice `grillo-memorias` en la cuenta
   (serverless, AWS us-east-1, métrica coseno, **dimensión 1024**). Probado
@@ -517,7 +517,7 @@ maestro original pedía "rioplatense/chileno neutro" — se prioriza el
 feedback explícito del usuario sobre el spec original.
 
 **Alcance**: se barrió todo el texto en español que ve o escucha el usuario
-— el system prompt de Grillo (`lib/tools/definitions.ts`, el más importante:
+— el system prompt de Griyo (`lib/tools/definitions.ts`, el más importante:
 define cómo habla el LLM en modo real), las respuestas y heurísticas del
 modo mock (`lib/ai/claude.ts`, `lib/ai/ragAsk.ts`), y las 12 pantallas/
 componentes de la UI (landing, login, `/abuelo`, `/familia`, VoiceChat,
@@ -542,7 +542,7 @@ recordatorio (`chatMock` en `claude.ts`) buscaban literalmente las palabras
 en voseo ("acordate", "acordame") en lo que escribe/dice el usuario. Al
 neutralizar el texto de la app había que neutralizar también esas regex de
 detección (ahora reconocen "recuérdame"/"acuérdate"), si no el mismo cambio
-habría roto la detección de "Grillo, recuérdame tomar la pastilla...".
+habría roto la detección de "Griyo, recuérdame tomar la pastilla...".
 
 **Verificación**: `tsc`, `next build` y `eslint` limpios. Probado en
 navegador de punta a punta con el nuevo texto — pedido de recordatorio,
@@ -585,7 +585,7 @@ Verificado después del fix: un solo registro por toque.
 **Mejoras chicas agregadas de paso** (mismo pase, bajo riesgo):
 - `/abuelo` muestra la fecha del día ("Jueves, 6 de agosto") para dar
   orientación temporal.
-- `/familia` muestra "Carlos habló con Grillo por última vez hace X" (o
+- `/familia` muestra "Carlos habló con Griyo por última vez hace X" (o
   "todavía no charló"), reutilizando el log de `conversaciones` que ya se
   guardaba pero no se mostraba en ningún lado — nueva ruta
   `GET /api/conversaciones`.
@@ -601,9 +601,9 @@ un único registro). Datos de prueba reseteados al terminar.
 Pase puramente visual/interacción/performance sobre el MVP ya funcional de
 la Sesión 1. Sin cambios de lógica de negocio ni funciones nuevas.
 
-### Sistema de diseño — "Grillo al atardecer"
+### Sistema de diseño — "Griyo al atardecer"
 
-El concepto: el grillo canta al atardecer, el momento del patio y la
+El concepto: el griyo canta al atardecer, el momento del patio y la
 sobremesa en casa de los abuelos — luz cálida de lámpara contra un cielo de
 atardecer. Se evitaron deliberadamente los 3 looks genéricos de IA (cream +
 serif + terracota / fondo casi negro + neón / estilo "diario"): tipografía
@@ -634,9 +634,9 @@ relleno) — reemplaza los emoji de tipo de recordatorio (💊💧🩺🎉📌) 
 tenía la v1, que no eran consistentes entre sistemas operativos.
 
 **Elemento firma — "el chirrido"**: en vez de un pulso genérico, la
-animación del botón de micrófono late en el ritmo real de un grillo (dos
+animación del botón de micrófono late en el ritmo real de un griyo (dos
 pulsos cortos + pausa, `chirp-active` en `tailwind.config.ts`) mientras
-Grillo escucha. Un grillo lineal hecho a mano (`CricketMark`) es la marca —
+Griyo escucha. Un griyo lineal hecho a mano (`CricketMark`) es la marca —
 aparece en el header, la landing, y como favicon (`src/app/icon.svg`). El
 gradiente de atardecer envuelve *solo* la pantalla de conversación por voz,
 marcándola como el momento especial de la app.
@@ -705,7 +705,7 @@ marcándola como el momento especial de la app.
   `OPENAI_API_KEY`), `pinecone.ts` (vector store local en
   `/data/vectorstore.json` + similitud coseno, con backfill automático de
   memorias que no tenían vector indexado).
-- **03:10** — System prompt de Grillo (`src/lib/tools/definitions.ts`) con
+- **03:10** — System prompt de Griyo (`src/lib/tools/definitions.ts`) con
   los guardrails pedidos: tono cálido rioplatense, alcance acotado
   (rechaza amablemente temas fuera de lugar), rechazo sin detalle a
   contenido peligroso, sin consejo médico/legal/financiero específico, y
@@ -757,8 +757,8 @@ marcándola como el momento especial de la app.
     semilla no estaba indexada en el vector store porque se había insertado
     directo en la DB sin pasar por el tool `guardar_memoria`; se agregó un
     backfill automático en `buscarMemoriasSimilares`).
-  - Chat de texto "Grillo, recordame tomar la pastilla a las 15:30" →
-    Grillo respondió y el recordatorio apareció en el panel al instante.
+  - Chat de texto "Griyo, recordame tomar la pastilla a las 15:30" →
+    Griyo respondió y el recordatorio apareció en el panel al instante.
   - Chat de texto con una anécdota larga ("me acuerdo de cuando era chico en
     mi pueblo...") → se guardó como memoria de forma discreta y apareció en
     la vista familiar.

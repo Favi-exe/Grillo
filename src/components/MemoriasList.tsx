@@ -106,7 +106,7 @@ export default function MemoriasList() {
       {cargando && <p className="text-sand-700">Cargando...</p>}
       {!cargando && filtradas.length === 0 && (
         <p className="text-sand-700 text-lg">
-          Todavía no hay historias guardadas. A medida que converse con Grillo, van a ir apareciendo aquí.
+          Todavía no hay historias guardadas. A medida que converse con Griyo, van a ir apareciendo aquí.
         </p>
       )}
 

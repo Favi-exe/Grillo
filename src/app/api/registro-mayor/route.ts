@@ -4,12 +4,12 @@ import { createUsuario, createAbuelo, updateUsuario } from "@/lib/db";
 
 /**
  * Alta directa de la persona mayor, sin depender de que un familiar la
- * arme primero. Pensado para alguien que va a usar a Grillo como
+ * arme primero. Pensado para alguien que va a usar a Griyo como
  * herramienta de compañía/memoria por su cuenta (ej. dificultades de
  * memoria) — por eso la cuenta se crea ya confirmada (vía la Admin API de
  * Supabase, con email_confirm:true) en vez de esperar que confirme un mail,
  * que es fricción que este público no necesita. La contraseña la genera
- * Grillo, simple y ya resuelta — la persona no tiene que inventarla ni
+ * Griyo, simple y ya resuelta — la persona no tiene que inventarla ni
  * recordarla, porque el dispositivo va a quedar con la sesión guardada.
  */
 

@@ -27,7 +27,7 @@ export interface Recordatorio {
   descripcion: string;
   hora: string; // "HH:MM" formato 24h
   frecuencia: "una_vez" | "diario" | "semanal";
-  creado_por: string; // usuario id o "grillo"
+  creado_por: string; // usuario id o "griyo"
   activo: boolean;
   created_at: string;
   ultima_notificacion?: string | null;

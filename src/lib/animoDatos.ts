@@ -2,7 +2,7 @@ import { listMemorias, listRegistrosAnimo } from "@/lib/db";
 import { valenciaDe } from "@/lib/emociones";
 
 /**
- * Combina las dos fuentes de ánimo que tiene Grillo: lo que infiere de una
+ * Combina las dos fuentes de ánimo que tiene Griyo: lo que infiere de una
  * charla (memorias.emocion_detectada) y lo que la persona reporta ella
  * misma ("¿cómo te sientes hoy?", registros_animo). Un mismo punto de
  * datos, para que el gráfico y la detección de ánimo bajo (lib/animo.ts)

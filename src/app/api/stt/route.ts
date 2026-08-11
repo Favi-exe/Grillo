@@ -8,8 +8,8 @@ import { NextRequest, NextResponse } from "next/server";
  */
 
 const FRASES_MOCK = [
-  "Hola Grillo, ¿cómo estás hoy?",
-  "Grillo, recuérdame tomar la pastilla a las nueve",
+  "Hola Griyo, ¿cómo estás hoy?",
+  "Griyo, recuérdame tomar la pastilla a las nueve",
   "Me acuerdo cuando era chico en el pueblo, jugábamos en la plaza hasta que oscurecía",
   "¿Qué tiempo hace hoy?",
 ];

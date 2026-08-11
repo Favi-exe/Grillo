@@ -235,7 +235,7 @@ export default function EstadoAnimoFamiliar() {
     <div className="bg-white rounded-3xl shadow-warm-sm p-5">
       <h2 className="font-heading text-lg font-semibold text-sand-900 mb-1">Estado de ánimo</h2>
       <p className="text-base text-sand-700 mb-4">
-        Según lo que Grillo fue notando en las últimas dos semanas — una observación, no un
+        Según lo que Griyo fue notando en las últimas dos semanas — una observación, no un
         diagnóstico.
       </p>
 

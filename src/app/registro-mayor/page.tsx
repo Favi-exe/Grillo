@@ -10,7 +10,7 @@ type Paso = "intro" | "nombre" | "email" | "confirmar" | "listo";
 
 const NARRACION: Record<Paso, string> = {
   intro:
-    "Hola. Soy Grillo. Vamos a crear tu cuenta juntos. Son solo unos pasos sencillos, yo te voy guiando en cada uno.",
+    "Hola. Soy Griyo. Vamos a crear tu cuenta juntos. Son solo unos pasos sencillos, yo te voy guiando en cada uno.",
   nombre: "Primero, dime cómo te llamas.",
   email: "Ahora necesito tu correo electrónico, para guardar tu cuenta de forma segura.",
   confirmar: "Perfecto. Cuando quieras, creamos tu cuenta.",
@@ -72,7 +72,7 @@ export default function RegistroMayorPage() {
         {paso === "intro" && (
           <div className="flex flex-col gap-5 text-center">
             <h1 className="font-heading text-3xl font-semibold text-sand-900">
-              ¡Hola! Soy Grillo 🦗
+              ¡Hola! Soy Griyo 🦗
             </h1>
             <p className="text-xl text-sand-800 leading-relaxed">
               Vamos a crear tu cuenta juntos. Son solo unos pasos sencillos, yo te voy guiando en
@@ -192,7 +192,7 @@ export default function RegistroMayorPage() {
               </div>
             )}
             <button onClick={() => router.push("/abuelo")} className={botonCls}>
-              Empezar a hablar con Grillo
+              Empezar a hablar con Griyo
             </button>
           </div>
         )}

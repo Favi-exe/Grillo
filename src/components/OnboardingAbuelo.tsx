@@ -44,7 +44,7 @@ export default function OnboardingAbuelo({ onListo }: { onListo: () => void }) {
           Creemos su perfil
         </h1>
         <p className="text-sand-700 mb-4">
-          Los datos de la persona mayor que va a acompañar Grillo.
+          Los datos de la persona mayor que va a acompañar Griyo.
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input

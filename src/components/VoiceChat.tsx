@@ -26,7 +26,7 @@ const MessageBubble = memo(function MessageBubble({ m }: { m: ChatMessage }) {
 
 function ThinkingDots() {
   return (
-    <div className="flex items-center gap-1.5 self-start bg-white px-5 py-4 rounded-3xl rounded-bl-lg shadow-warm-sm animate-pop-in" aria-label="Grillo está pensando">
+    <div className="flex items-center gap-1.5 self-start bg-white px-5 py-4 rounded-3xl rounded-bl-lg shadow-warm-sm animate-pop-in" aria-label="Griyo está pensando">
       <span className="w-2.5 h-2.5 rounded-full bg-dusk-400 animate-think-dot" />
       <span className="w-2.5 h-2.5 rounded-full bg-dusk-400 animate-think-dot stagger-1" />
       <span className="w-2.5 h-2.5 rounded-full bg-dusk-400 animate-think-dot stagger-2" />
@@ -88,7 +88,7 @@ export default function VoiceChat() {
       await reproducirRespuesta(data.reply as string);
     } catch (err) {
       console.error(err);
-      setErrorMsg("Uy, no pude escuchar bien a Grillo. ¿Probamos de nuevo?");
+      setErrorMsg("Uy, no pude escuchar bien a Griyo. ¿Probamos de nuevo?");
       setEstado("idle");
     }
   }
@@ -160,12 +160,12 @@ export default function VoiceChat() {
     <div className="w-full max-w-2xl mx-auto">
       {/* Escenario de atardecer — el momento especial de la app. Todo lo demás
           en el resto de la interfaz vive en tonos arena; este gradiente
-          aparece solo aquí para señalar "este es el corazón de Grillo". */}
+          aparece solo aquí para señalar "este es el corazón de Griyo". */}
       <div className="relative rounded-5xl bg-dusk p-5 sm:p-7 shadow-warm-lg">
         <div className="w-full bg-sand-50/95 backdrop-blur-sm rounded-4xl shadow-inner p-4 mb-6 min-h-[180px] flex flex-col gap-3">
           {historia.length === 0 && (
             <p className="text-center text-sand-700 py-8 text-lg">
-              Toca el botón y empieza a hablar con Grillo.
+              Toca el botón y empieza a hablar con Griyo.
             </p>
           )}
           {historia.map((m, i) => (
@@ -196,7 +196,7 @@ export default function VoiceChat() {
             } ${estado === "pensando" || estado === "hablando" ? "opacity-80" : ""}`}
           >
             {/* Chirrido: el ritmo de pulso de un grillo real (dos latidos cortos + pausa),
-                la firma de movimiento de Grillo — activo mientras escucha. */}
+                la firma de movimiento de Griyo — activo mientras escucha. */}
             {escuchando && (
               <span className="absolute inset-0 rounded-full bg-clay-400 animate-chirp-active" />
             )}

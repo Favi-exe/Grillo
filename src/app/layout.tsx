@@ -20,7 +20,7 @@ const nunitoSans = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Grillo — tu compañía de cada día",
+  title: "Griyo — tu compañía de cada día",
   description: "Asistente de IA de compañía y Legado Vivo para adultos mayores",
 };
 

@@ -167,7 +167,7 @@ export function LibroLegadoDocument({ libro }: { libro: LibroLegado }) {
   const hoy = fechaLegible(new Date().toISOString());
 
   return (
-    <Document title={`El Legado Vivo de ${libro.nombreAbuelo}`} author="Grillo">
+    <Document title={`El Legado Vivo de ${libro.nombreAbuelo}`} author="Griyo">
       <Page size="A5" style={styles.portada}>
         <View style={styles.cricketWrap}>
           <CricketMarkPdf />
@@ -178,10 +178,10 @@ export function LibroLegadoDocument({ libro }: { libro: LibroLegado }) {
         </Text>
         <Text style={styles.dedicatoria}>
           Este es un pequeño libro con algunas de las historias que {libro.nombreAbuelo} fue
-          compartiendo, charla a charla, con Grillo. Para que su familia siempre pueda volver a
+          compartiendo, charla a charla, con Griyo. Para que su familia siempre pueda volver a
           encontrarlo en ellas.
         </Text>
-        <Text style={styles.firma}>GRILLO — TU COMPAÑÍA DE CADA DÍA</Text>
+        <Text style={styles.firma}>GRIYO — TU COMPAÑÍA DE CADA DÍA</Text>
       </Page>
 
       {libro.capitulos.map((capitulo, i) => (
@@ -217,7 +217,7 @@ export function LibroLegadoDocument({ libro }: { libro: LibroLegado }) {
           <CricketMarkPdf size={40} color={DUSK} />
         </View>
         <Text style={styles.cierreTexto}>
-          Gracias por dejar que Grillo escuchara estas historias.{"\n\n"}
+          Gracias por dejar que Griyo escuchara estas historias.{"\n\n"}
           Que sigan siendo, para siempre, un lugar al que volver.
         </Text>
       </Page>

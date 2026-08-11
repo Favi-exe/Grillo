@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: yaExiste
-            ? "Ese correo ya tiene una cuenta en Grillo."
+            ? "Ese correo ya tiene una cuenta en Griyo."
             : "No pudimos enviar la invitación. Intenta de nuevo.",
         },
         { status: 400 }

@@ -82,7 +82,7 @@ export default function FamiliaPage() {
             Vista familiar — {abuelo?.nombre}
           </h1>
           <p className="text-sand-700 text-lg mb-1">
-            Hola {usuario?.nombre}, aquí está lo que Grillo fue guardando
+            Hola {usuario?.nombre}, aquí está lo que Griyo fue guardando
           </p>
           <EstadoCarlos nombre={abuelo?.nombre ?? ""} />
         </div>

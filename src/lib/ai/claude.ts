@@ -1,4 +1,4 @@
-import { buildSystemPrompt, GRILLO_TOOLS } from "@/lib/tools/definitions";
+import { buildSystemPrompt, GRIYO_TOOLS } from "@/lib/tools/definitions";
 import { executeTool, type ToolContext, type ToolExecutionResult } from "@/lib/tools/executor";
 import type { ChatMessage } from "@/lib/types";
 import type Anthropic from "@anthropic-ai/sdk";
@@ -15,7 +15,7 @@ export interface ChatResult {
   fuente: "mock" | "real" | "limite";
 }
 
-export async function chatWithGrillo(
+export async function chatWithGriyo(
   ctx: ToolContext,
   nombreAbuelo: string,
   notasGenerales: string | null | undefined,
@@ -86,7 +86,7 @@ async function chatReal(
       max_tokens: 1024,
       system,
       messages,
-      tools: GRILLO_TOOLS,
+      tools: GRIYO_TOOLS,
     });
     tokensEntrada += response.usage.input_tokens;
     tokensSalida += response.usage.output_tokens;

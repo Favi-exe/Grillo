@@ -77,7 +77,7 @@ export async function executeTool(
       const resumenNuevo = String(input.resumen ?? "");
 
       // Red de seguridad extra contra duplicados: si la persona repite una
-      // historia que ya se guardó hace poco (p. ej. porque Grillo no
+      // historia que ya se guardó hace poco (p. ej. porque Griyo no
       // respondió bien la primera vez y se lo volvió a contar), no la
       // vuelve a guardar como un recuerdo aparte.
       const existentes = await listMemorias(ctx.abueloId);

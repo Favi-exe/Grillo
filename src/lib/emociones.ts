@@ -1,6 +1,6 @@
 /**
- * Vocabulario cerrado de emociones que puede detectar Grillo al guardar una
- * memoria (ver GRILLO_TOOLS en src/lib/tools/definitions.ts, donde el schema
+ * Vocabulario cerrado de emociones que puede detectar Griyo al guardar una
+ * memoria (ver GRIYO_TOOLS en src/lib/tools/definitions.ts, donde el schema
  * de la tool restringe emocion_detectada a este mismo set). Un vocabulario
  * cerrado es lo que permite agregar/graficar el ánimo en el tiempo — texto
  * libre ("un poco triste", "medio nostálgico") no se puede agrupar.
@@ -71,8 +71,8 @@ export function balanceDe(emocion: string): BalanceAnimo {
 /**
  * Escala de 5 niveles para el auto-registro directo ("¿cómo te sientes
  * hoy?", ver RegistroAnimoAbuelo.tsx) — a diferencia del vocabulario de
- * arriba (lo que Grillo infiere de una charla), esto es lo que la persona
- * elige ella misma. Colores en degradé propio de Grillo (clay → sand →
+ * arriba (lo que Griyo infiere de una charla), esto es lo que la persona
+ * elige ella misma. Colores en degradé propio de Griyo (clay → sand →
  * gold), no un semáforo rojo-verde genérico.
  */
 export const NIVELES_ANIMO = [

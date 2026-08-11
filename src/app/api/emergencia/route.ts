@@ -52,8 +52,8 @@ async function notificarFamilia(abueloId: string) {
       if (error || !email) return;
       await enviarEmail({
         to: email,
-        subject: `🚨 ${nombre} pidió ayuda a través de Grillo`,
-        html: `<p><strong>${nombre}</strong> tocó el botón de emergencia en Grillo a las ${hora}.</p><p>Contáctalo/a ahora para asegurarte de que esté bien.</p>`,
+        subject: `🚨 ${nombre} pidió ayuda a través de Griyo`,
+        html: `<p><strong>${nombre}</strong> tocó el botón de emergencia en Griyo a las ${hora}.</p><p>Contáctalo/a ahora para asegurarte de que esté bien.</p>`,
       });
     })
   );

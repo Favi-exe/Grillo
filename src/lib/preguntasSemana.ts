@@ -2,7 +2,7 @@
  * Preguntas de reminiscencia, rotan una por semana (determinístico por
  * número de semana del año — misma pregunta para todos toda la semana, sin
  * necesitar guardar nada). Pensadas para invitar a compartir un recuerdo
- * concreto, no un feed social — Grillo es 1 a 1 con su familia, no una
+ * concreto, no un feed social — Griyo es 1 a 1 con su familia, no una
  * comunidad como otras apps de bienestar.
  */
 export const PREGUNTAS_SEMANA = [

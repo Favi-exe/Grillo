@@ -1,7 +1,7 @@
 import type { SVGProps } from "react";
 
 /**
- * Set de íconos propio de Grillo — todos comparten el mismo grosor de línea
+ * Set de íconos propio de Griyo — todos comparten el mismo grosor de línea
  * (1.8), extremos y uniones redondeados, sin relleno. Evita mezclar estilos
  * (geométrico/emoji/relleno) para que la interfaz se lea como un solo
  * sistema. SVG inline: cero requests de red, tree-shakeable.
@@ -313,7 +313,7 @@ export function SearchIcon(props: IconProps) {
 }
 
 /**
- * Marca de Grillo — un grillo estilizado y redondeado, mismo lenguaje de
+ * Marca de Griyo — un grillo estilizado y redondeado, mismo lenguaje de
  * trazo que el resto del set. Se usa como firma de marca (header, favicon,
  * pantalla de bienvenida), nunca como ícono funcional suelto.
  */

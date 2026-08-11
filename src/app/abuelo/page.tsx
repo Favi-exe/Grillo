@@ -60,7 +60,7 @@ export default function AbueloPage() {
         <p className="text-sand-700 text-lg max-w-sm">
           Pídele a un familiar que entre a su cuenta y toque{" "}
           <span className="font-semibold">&quot;Vincular este dispositivo&quot;</span> desde aquí
-          mismo, o crea tu propia cuenta si quieres usar a Grillo por tu cuenta.
+          mismo, o crea tu propia cuenta si quieres usar a Griyo por tu cuenta.
         </p>
         <button
           onClick={() => router.push("/registro-mayor")}

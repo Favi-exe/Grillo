@@ -1,4 +1,4 @@
-# Grillo 🦗
+# Griyo 🦗
 
 Asistente de IA de compañía para adultos mayores. Conversa por voz, ayuda con
 recordatorios, y captura silenciosamente anécdotas e historias de vida
@@ -45,13 +45,13 @@ error (verificado en [PROGRESO.md](PROGRESO.md), Sesión 6).
 
 ## Los 4 flujos del MVP
 
-1. **Conversación por voz** (`/abuelo`) — tocas el micrófono, hablas, Grillo
+1. **Conversación por voz** (`/abuelo`) — tocas el micrófono, hablas, Griyo
    transcribe con la Web Speech API del navegador, le responde un LLM (real o
    mock) y te contesta en voz.
-2. **Recordatorios** — pídele a Grillo por voz o texto "recuérdame tomar la
+2. **Recordatorios** — pídele a Griyo por voz o texto "recuérdame tomar la
    pastilla a las 9" y queda guardado; también se pueden cargar desde la
    vista familiar. Se muestran en pantalla y avisan cuando llega la hora.
-3. **Legado Vivo** — cuando cuentas una anécdota o algo significativo, Grillo
+3. **Legado Vivo** — cuando cuentas una anécdota o algo significativo, Griyo
    lo detecta y lo guarda como "memoria" sin interrumpir la charla.
 4. **Vista familiar** (`/familia`) — un hijo/nieto ve las memorias
    capturadas, las filtra por tema, y le puede preguntar a la memoria de su

@@ -18,7 +18,7 @@ export async function preguntarMemorias(
 
   if (resultados.length === 0) {
     return {
-      respuesta: `Todavía no hay recuerdos guardados de ${nombreAbuelo} sobre eso. A medida que converse con Grillo, van a ir apareciendo más historias aquí.`,
+      respuesta: `Todavía no hay recuerdos guardados de ${nombreAbuelo} sobre eso. A medida que converse con Griyo, van a ir apareciendo más historias aquí.`,
       memoriasUsadas: [],
       fuente: "mock",
     };
@@ -34,7 +34,7 @@ export async function preguntarMemorias(
       const response = await anthropic.messages.create({
         model: process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6",
         max_tokens: 600,
-        system: `Eres Grillo. Un familiar te está preguntando por recuerdos de ${nombreAbuelo} que ya fueron capturados en conversaciones previas. Responde de forma cálida, en tercera persona, contando la historia como si se la relataras a la familia. Básate SOLO en los recuerdos provistos; si no alcanza para responder del todo, dilo con honestidad.
+        system: `Eres Griyo. Un familiar te está preguntando por recuerdos de ${nombreAbuelo} que ya fueron capturados en conversaciones previas. Responde de forma cálida, en tercera persona, contando la historia como si se la relataras a la familia. Básate SOLO en los recuerdos provistos; si no alcanza para responder del todo, dilo con honestidad.
 
 Usa español neutro, con "tú/tu" si te diriges directamente al familiar. Tienes prohibido el voseo argentino/uruguayo (nunca "vos", "tenés", "contame", "sabés", "sos") y cualquier otro regionalismo marcado — el público es de Chile y de otros países hispanohablantes.
 

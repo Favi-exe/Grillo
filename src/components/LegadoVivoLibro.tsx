@@ -42,7 +42,7 @@ export default function LegadoVivoLibro({ abueloNombre }: { abueloNombre: string
         <h2 className="font-heading text-lg font-semibold text-sand-900">El Legado Vivo de {abueloNombre}</h2>
       </div>
       <p className="text-base text-sand-700 mb-4">
-        Un pequeño libro con las historias que {abueloNombre} le fue contando a Grillo, listo para
+        Un pequeño libro con las historias que {abueloNombre} le fue contando a Griyo, listo para
         guardar o imprimir — hoy, o cuando la familia lo necesite.
       </p>
       {error && <p className="text-clay-600 mb-3">{error}</p>}
