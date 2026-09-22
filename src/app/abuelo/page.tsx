@@ -7,6 +7,7 @@ import { borrarTokenDispositivo } from "@/lib/auth/deviceToken";
 import { cerrarSesionFamiliar } from "@/lib/auth/familiarSession";
 import VoiceChat from "@/components/VoiceChat";
 import RecordatoriosPanel from "@/components/RecordatoriosPanel";
+import ActivarNotificaciones from "@/components/ActivarNotificaciones";
 import BotonEmergencia from "@/components/BotonEmergencia";
 import RegistroAnimoAbuelo from "@/components/RegistroAnimoAbuelo";
 import PreguntaSemana from "@/components/PreguntaSemana";
@@ -116,6 +117,7 @@ export default function AbueloPage() {
       </div>
       <div className="opacity-0 animate-fade-rise stagger-3">
         <RecordatoriosPanel />
+        <ActivarNotificaciones />
       </div>
       <div className="max-w-2xl mx-auto mt-6 opacity-0 animate-fade-rise stagger-3">
         <InvitarFamiliar />

@@ -33,10 +33,11 @@ export async function POST(req: NextRequest) {
     const { abueloId, usuarioId } = await requireFamiliarConAbuelo(req);
 
     const body = await req.json();
-    const { tipo, descripcion, hora, frecuencia } = body as {
+    const { tipo, descripcion, hora, fecha, frecuencia } = body as {
       tipo: TipoRecordatorio;
       descripcion: string;
       hora: string;
+      fecha?: string | null;
       frecuencia: "una_vez" | "diario" | "semanal";
     };
 
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
       tipo: tipo ?? "otro",
       descripcion,
       hora,
+      fecha: fecha || null,
       frecuencia: frecuencia ?? "una_vez",
       creado_por: usuarioId,
       activo: true,

@@ -11,6 +11,7 @@ import type {
   AlertaAnimo,
   RegistroAnimo,
   AbueloDispositivo,
+  PushSubscriptionRow,
 } from "@/lib/types";
 
 interface DbShape {
@@ -23,6 +24,7 @@ interface DbShape {
   alertas_animo: AlertaAnimo[];
   registros_animo: RegistroAnimo[];
   abuelo_dispositivos: AbueloDispositivo[];
+  push_subscriptions: PushSubscriptionRow[];
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -42,6 +44,7 @@ function vacio(): DbShape {
     alertas_animo: [],
     registros_animo: [],
     abuelo_dispositivos: [],
+    push_subscriptions: [],
   };
 }
 
@@ -62,6 +65,7 @@ function ensureDb(): DbShape {
     if (!parsed.alertas_animo) parsed.alertas_animo = [];
     if (!parsed.registros_animo) parsed.registros_animo = [];
     if (!parsed.abuelo_dispositivos) parsed.abuelo_dispositivos = [];
+    if (!parsed.push_subscriptions) parsed.push_subscriptions = [];
     return parsed as DbShape;
   } catch {
     const initial = vacio();
@@ -150,6 +154,11 @@ export const localStore = {
     db.recordatorios = db.recordatorios.filter((r) => r.id !== id);
     save(db);
     return db.recordatorios.length < before;
+  },
+  // Cruza todos los abuelos — la usa el envío de notificaciones push, que
+  // corre una sola vez por tick de cron para todo el mundo, no por abuelo.
+  listTodosRecordatoriosActivos(): Recordatorio[] {
+    return ensureDb().recordatorios.filter((r) => r.activo);
   },
 
   // --- Memorias ---
@@ -293,5 +302,39 @@ export const localStore = {
     db.abuelo_dispositivos = db.abuelo_dispositivos.filter((d) => d.id !== id);
     save(db);
     return db.abuelo_dispositivos.length < before;
+  },
+
+  // --- Suscripciones a notificaciones push ---
+  guardarPushSubscription(input: {
+    abueloId: string;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+  }): PushSubscriptionRow {
+    const db = ensureDb();
+    // Mismo endpoint ya suscrito (recarga, reinstalación): reemplaza en vez
+    // de duplicar.
+    db.push_subscriptions = db.push_subscriptions.filter((s) => s.endpoint !== input.endpoint);
+    const nueva: PushSubscriptionRow = {
+      id: randomUUID(),
+      abuelo_id: input.abueloId,
+      endpoint: input.endpoint,
+      p256dh: input.p256dh,
+      auth: input.auth,
+      created_at: new Date().toISOString(),
+    };
+    db.push_subscriptions.push(nueva);
+    save(db);
+    return nueva;
+  },
+  listPushSubscriptions(abueloId: string): PushSubscriptionRow[] {
+    return ensureDb().push_subscriptions.filter((s) => s.abuelo_id === abueloId);
+  },
+  eliminarPushSubscriptionPorEndpoint(endpoint: string): boolean {
+    const db = ensureDb();
+    const before = db.push_subscriptions.length;
+    db.push_subscriptions = db.push_subscriptions.filter((s) => s.endpoint !== endpoint);
+    save(db);
+    return db.push_subscriptions.length < before;
   },
 };

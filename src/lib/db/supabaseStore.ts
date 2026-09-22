@@ -10,6 +10,7 @@ import type {
   AlertaAnimo,
   RegistroAnimo,
   AbueloDispositivo,
+  PushSubscriptionRow,
 } from "@/lib/types";
 
 export const supabaseStore = {
@@ -129,6 +130,14 @@ export const supabaseStore = {
     const { error } = await getSupabaseClient().from("recordatorios").delete().eq("id", id);
     if (error) throw error;
     return true;
+  },
+  async listTodosRecordatoriosActivos(): Promise<Recordatorio[]> {
+    const { data, error } = await getSupabaseClient()
+      .from("recordatorios")
+      .select("*")
+      .eq("activo", true);
+    if (error) throw error;
+    return data as Recordatorio[];
   },
 
   async listMemorias(abueloId: string): Promise<Memoria[]> {
@@ -312,6 +321,49 @@ export const supabaseStore = {
   },
   async eliminarDispositivo(id: string): Promise<boolean> {
     const { error } = await getSupabaseClient().from("abuelo_dispositivos").delete().eq("id", id);
+    if (error) throw error;
+    return true;
+  },
+
+  async guardarPushSubscription(input: {
+    abueloId: string;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+  }): Promise<PushSubscriptionRow> {
+    const client = getSupabaseClient();
+    // Mismo endpoint ya suscrito (recarga, reinstalación): reemplaza en vez
+    // de duplicar — la columna endpoint es unique.
+    await client.from("push_subscriptions").delete().eq("endpoint", input.endpoint);
+    const nueva = {
+      id: randomUUID(),
+      abuelo_id: input.abueloId,
+      endpoint: input.endpoint,
+      p256dh: input.p256dh,
+      auth: input.auth,
+      created_at: new Date().toISOString(),
+    };
+    const { data, error } = await client
+      .from("push_subscriptions")
+      .insert(nueva)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as PushSubscriptionRow;
+  },
+  async listPushSubscriptions(abueloId: string): Promise<PushSubscriptionRow[]> {
+    const { data, error } = await getSupabaseClient()
+      .from("push_subscriptions")
+      .select("*")
+      .eq("abuelo_id", abueloId);
+    if (error) throw error;
+    return data as PushSubscriptionRow[];
+  },
+  async eliminarPushSubscriptionPorEndpoint(endpoint: string): Promise<boolean> {
+    const { error } = await getSupabaseClient()
+      .from("push_subscriptions")
+      .delete()
+      .eq("endpoint", endpoint);
     if (error) throw error;
     return true;
   },

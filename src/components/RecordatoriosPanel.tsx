@@ -11,6 +11,11 @@ function horaActual(): string {
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
+function fechaHoy(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
 const RecordatorioItem = memo(function RecordatorioItem({ r }: { r: Recordatorio }) {
   const info = TIPO_INFO[r.tipo];
   return (
@@ -32,7 +37,16 @@ export default function RecordatoriosPanel() {
     try {
       const res = await fetchAbuelo("/api/recordatorios");
       const data = await res.json();
-      setRecordatorios((data.recordatorios ?? []).filter((r: Recordatorio) => r.activo));
+      const hoy = fechaHoy();
+      // Solo lo que aplica hoy: sin fecha fija (diario/semanal/de-siempre)
+      // o con fecha puntual que es justo hoy. Uno agendado para otro día
+      // (ej. "el martes 22") no se muestra acá para no ensuciar la lista
+      // del día — aparece solo cuando llegue esa fecha.
+      setRecordatorios(
+        (data.recordatorios ?? []).filter(
+          (r: Recordatorio) => r.activo && (!r.fecha || r.fecha === hoy)
+        )
+      );
     } catch (err) {
       console.error("[RecordatoriosPanel]", err);
     }

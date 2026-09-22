@@ -11,6 +11,7 @@ import type {
   AlertaAnimo,
   RegistroAnimo,
   AbueloDispositivo,
+  PushSubscriptionRow,
 } from "@/lib/types";
 
 /**
@@ -85,6 +86,11 @@ export async function deleteRecordatorio(id: string): Promise<boolean> {
   return usandoSupabase()
     ? supabaseStore.deleteRecordatorio(id)
     : localStore.deleteRecordatorio(id);
+}
+export async function listTodosRecordatoriosActivos(): Promise<Recordatorio[]> {
+  return usandoSupabase()
+    ? supabaseStore.listTodosRecordatoriosActivos()
+    : localStore.listTodosRecordatoriosActivos();
 }
 
 export async function listMemorias(abueloId: string): Promise<Memoria[]> {
@@ -169,4 +175,25 @@ export async function listDispositivos(abueloId: string): Promise<AbueloDisposit
 }
 export async function eliminarDispositivo(id: string): Promise<boolean> {
   return usandoSupabase() ? supabaseStore.eliminarDispositivo(id) : localStore.eliminarDispositivo(id);
+}
+
+export async function guardarPushSubscription(input: {
+  abueloId: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+}): Promise<PushSubscriptionRow> {
+  return usandoSupabase()
+    ? supabaseStore.guardarPushSubscription(input)
+    : localStore.guardarPushSubscription(input);
+}
+export async function listPushSubscriptions(abueloId: string): Promise<PushSubscriptionRow[]> {
+  return usandoSupabase()
+    ? supabaseStore.listPushSubscriptions(abueloId)
+    : localStore.listPushSubscriptions(abueloId);
+}
+export async function eliminarPushSubscriptionPorEndpoint(endpoint: string): Promise<boolean> {
+  return usandoSupabase()
+    ? supabaseStore.eliminarPushSubscriptionPorEndpoint(endpoint)
+    : localStore.eliminarPushSubscriptionPorEndpoint(endpoint);
 }

@@ -4,11 +4,13 @@ import { EMOCIONES } from "@/lib/emociones";
 export function buildSystemPrompt(
   nombreAbuelo: string,
   notasGenerales?: string | null,
-  momentoActual?: string | null
+  momentoActual?: string | null,
+  fechaHoy?: string | null
 ): string {
   return `Eres Griyo, un acompañante conversacional cálido para adultos mayores. Ahora estás hablando con ${nombreAbuelo}.
 ${notasGenerales ? `Datos que sabes de ${nombreAbuelo}: ${notasGenerales}` : ""}
 ${momentoActual ? `Ahora mismo, del lado de ${nombreAbuelo}, es ${momentoActual}. Ten esto en cuenta para saludar y referirte al momento del día (por ejemplo, no digas "buenos días" ni preguntes cómo va la mañana si ya es de tarde o de noche).` : ""}
+${fechaHoy ? `Hoy es ${fechaHoy}. Usa esto para calcular cualquier fecha relativa que mencionen ("mañana", "el próximo martes", "en tres días", "el 22") al crear un recordatorio — ver la herramienta crear_recordatorio.` : ""}
 
 ## Cómo hablas
 - Español neutro, SIEMPRE. Usa "tú/tu" y sus formas verbales (puedes, quieres, tienes, cuéntame). Tienes terminantemente PROHIBIDO usar voseo argentino o uruguayo: nunca "vos", "tenés", "querés", "contame", "sabés", "sos", ni el imperativo con tilde final ("contá", "mirá", "decí"). Tampoco uses otros regionalismos marcados (che, boludo, pibe, laburo, etc.) ni acento de ningún país en particular — el público es de Chile y de otros países hispanohablantes, y el tono debe sonar neutro para todos.
@@ -19,7 +21,7 @@ ${momentoActual ? `Ahora mismo, del lado de ${nombreAbuelo}, es ${momentoActual}
 
 ## Qué puedes hacer (tools)
 Tienes acceso a estas herramientas y las usas tú mismo cuando corresponde, sin anunciar que las estás usando:
-- crear_recordatorio: cuando piden que les recuerdes algo (medicamento, agua, cita médica, evento familiar).
+- crear_recordatorio: cuando piden que les recuerdes algo (medicamento, agua, cita médica, evento familiar) — ya sea algo que se repite o algo puntual en una fecha determinada.
 - consultar_recordatorios: cuando preguntan qué recordatorios tienen o qué les toca hoy.
 - guardar_memoria: cuando cuentan una anécdota, un recuerdo, una historia de su vida, o expresan un sentimiento significativo. Hazlo de forma DISCRETA — nunca digas "voy a guardar esto" ni lo anuncies, simplemente sigue la charla con naturalidad mientras por dentro guardas la memoria.
 - buscar_memorias: si quieres recordar algo que la persona ya te contó antes, para retomarlo en la charla.
@@ -46,7 +48,7 @@ export const GRIYO_TOOLS: Anthropic.Tool[] = [
   {
     name: "crear_recordatorio",
     description:
-      "Crea un recordatorio para el abuelo (medicamento, agua, cita médica, evento familiar, u otro). Úsalo cuando la persona (o un familiar) pida que se le recuerde algo a una hora determinada.",
+      "Crea un recordatorio para el abuelo (medicamento, agua, cita médica, evento familiar, u otro). Úsalo cuando la persona (o un familiar) pida que se le recuerde algo a una hora determinada — tanto si es algo que se repite ('recuérdame tomar agua todos los días a las 12') como si es puntual, con o sin día explícito ('recuérdame la hora al médico el martes 22 a las 13:30', 'recuérdame llamar a mi hija a las 18:00').",
     input_schema: {
       type: "object",
       properties: {
@@ -63,10 +65,15 @@ export const GRIYO_TOOLS: Anthropic.Tool[] = [
           type: "string",
           description: "Hora en formato 24hs HH:MM, ej. '09:00'",
         },
+        fecha: {
+          type: "string",
+          description:
+            "Fecha calendario en formato YYYY-MM-DD, SOLO para frecuencia 'una_vez'. Calcúlala a partir de la fecha de hoy que aparece en tu instrucción de sistema: si dicen un día puntual ('el martes 22', 'el 5 de octubre'), usa esa fecha; si dicen algo relativo ('mañana', 'el próximo lunes', 'en tres días'), calcúlala desde hoy; si es 'una_vez' y NO mencionan ningún día, usa la fecha de HOY (asumí que es para hoy). Para frecuencia 'diario' o 'semanal' no incluyas este campo — son recordatorios sin fecha de fin.",
+        },
         frecuencia: {
           type: "string",
           enum: ["una_vez", "diario", "semanal"],
-          description: "Con qué frecuencia se repite. Si no se aclara, asumí 'diario' para medicamentos y 'una_vez' para el resto.",
+          description: "Con qué frecuencia se repite. Si no se aclara, asumí 'diario' para medicamentos y 'una_vez' para el resto (una cita médica puntual, por ejemplo, siempre es 'una_vez' con su 'fecha' correspondiente).",
         },
       },
       required: ["tipo", "descripcion", "hora", "frecuencia"],

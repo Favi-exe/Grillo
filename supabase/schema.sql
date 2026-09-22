@@ -35,12 +35,16 @@ create table if not exists recordatorios (
   tipo text not null check (tipo in ('medicamento', 'agua', 'cita', 'evento', 'otro')),
   descripcion text not null,
   hora text not null, -- "HH:MM"
+  fecha date, -- día calendario para un recordatorio puntual (p. ej. "una_vez"); null = sin día fijo
   frecuencia text not null check (frecuencia in ('una_vez', 'diario', 'semanal')),
   creado_por uuid,
   activo boolean not null default true,
   ultima_notificacion timestamptz,
   created_at timestamptz not null default now()
 );
+
+-- Si la tabla ya existía de antes de sumar `fecha` (proyectos ya desplegados):
+alter table recordatorios add column if not exists fecha date;
 
 create table if not exists memorias (
   id uuid primary key default uuid_generate_v4(),
@@ -107,7 +111,22 @@ create table if not exists abuelo_dispositivos (
   ultimo_acceso timestamptz
 );
 
+-- Una fila por dispositivo suscrito a notificaciones push (normalmente la
+-- tablet/notebook del abuelo, ver /abuelo). "endpoint" identifica de forma
+-- única la suscripción del navegador — si el mismo dispositivo se suscribe
+-- de nuevo (reinstaló, limpió datos), se reemplaza por endpoint, no se
+-- duplica.
+create table if not exists push_subscriptions (
+  id uuid primary key default uuid_generate_v4(),
+  abuelo_id uuid not null references abuelos(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_recordatorios_abuelo on recordatorios(abuelo_id);
+create index if not exists idx_push_subscriptions_abuelo on push_subscriptions(abuelo_id);
 create index if not exists idx_memorias_abuelo on memorias(abuelo_id);
 create index if not exists idx_conversaciones_abuelo on conversaciones(abuelo_id);
 create index if not exists idx_alertas_abuelo on alertas_emergencia(abuelo_id);
@@ -137,6 +156,7 @@ alter table alertas_emergencia enable row level security;
 alter table alertas_animo enable row level security;
 alter table registros_animo enable row level security;
 alter table abuelo_dispositivos enable row level security;
+alter table push_subscriptions enable row level security;
 
 drop policy if exists usuarios_propio_o_familia on usuarios;
 create policy usuarios_propio_o_familia on usuarios for select to authenticated
@@ -196,7 +216,12 @@ create policy registros_animo_mi_familia on registros_animo for all to authentic
 grant usage on schema public to service_role, authenticated;
 grant all on all tables in schema public to service_role;
 grant all on all sequences in schema public to service_role;
-grant select, insert, update, delete on abuelos, usuarios, recordatorios, memorias, conversaciones, alertas_emergencia, alertas_animo, registros_animo to authenticated;
+drop policy if exists push_subscriptions_mi_familia on push_subscriptions;
+create policy push_subscriptions_mi_familia on push_subscriptions for all to authenticated
+  using (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()))
+  with check (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()));
+
+grant select, insert, update, delete on abuelos, usuarios, recordatorios, memorias, conversaciones, alertas_emergencia, alertas_animo, registros_animo, push_subscriptions to authenticated;
 alter default privileges in schema public grant all on tables to service_role;
 alter default privileges in schema public grant all on sequences to service_role;
 

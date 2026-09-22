@@ -8,6 +8,11 @@ import { PlusIcon, TrashIcon, PauseIcon, PlayIcon } from "@/components/icons";
 
 const TIPOS: TipoRecordatorio[] = ["medicamento", "agua", "cita", "evento", "otro"];
 
+function fechaHoyLocal(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
 const RecordatorioFilaFamiliar = memo(function RecordatorioFilaFamiliar({
   r,
   onToggle,
@@ -28,6 +33,14 @@ const RecordatorioFilaFamiliar = memo(function RecordatorioFilaFamiliar({
         <TipoRecordatorioIcon tipo={r.tipo} className="w-5 h-5" />
       </span>
       <span className="flex-1 min-w-[120px] text-lg text-sand-900">{r.descripcion}</span>
+      {r.fecha && (
+        <span className="text-sm text-sand-700 bg-white/70 px-2.5 py-1 rounded-full tabular-nums">
+          {new Date(r.fecha + "T00:00:00").toLocaleDateString("es-419", {
+            day: "numeric",
+            month: "short",
+          })}
+        </span>
+      )}
       <span className="font-semibold tabular-nums text-sand-800">{r.hora}</span>
       <span className="text-sm text-sand-700 bg-white/70 px-2.5 py-1 rounded-full">{r.frecuencia}</span>
       <button
@@ -53,6 +66,7 @@ export default function RecordatoriosFamiliar() {
   const [tipo, setTipo] = useState<TipoRecordatorio>("medicamento");
   const [descripcion, setDescripcion] = useState("");
   const [hora, setHora] = useState("09:00");
+  const [fecha, setFecha] = useState("");
   const [frecuencia, setFrecuencia] = useState<"una_vez" | "diario" | "semanal">("diario");
   const [guardando, setGuardando] = useState(false);
 
@@ -74,9 +88,16 @@ export default function RecordatoriosFamiliar() {
       await fetchFamiliar("/api/recordatorios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tipo, descripcion, hora, frecuencia }),
+        body: JSON.stringify({
+          tipo,
+          descripcion,
+          hora,
+          fecha: frecuencia === "una_vez" ? fecha || fechaHoyLocal() : null,
+          frecuencia,
+        }),
       });
       setDescripcion("");
+      setFecha("");
       await cargar();
     } finally {
       setGuardando(false);
@@ -138,6 +159,15 @@ export default function RecordatoriosFamiliar() {
           <option value="diario">Diario</option>
           <option value="semanal">Semanal</option>
         </select>
+        {frecuencia === "una_vez" && (
+          <input
+            type="date"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            title="Día (opcional — si no se elige, se asume hoy)"
+            className={inputCls}
+          />
+        )}
         <button
           type="submit"
           disabled={guardando}

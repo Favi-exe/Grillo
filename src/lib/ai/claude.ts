@@ -15,6 +15,15 @@ export interface ChatResult {
   fuente: "mock" | "real" | "limite";
 }
 
+// Cuántos mensajes recientes (usuario+asistente, no turnos) se mandan como
+// contexto a Claude. Sin este techo, `historia` crece sin límite durante
+// una charla larga: cada vuelta manda la conversación completa de nuevo, lo
+// que encarece cada mensaje más que el anterior y puede terminar pasando el
+// límite de contexto del modelo. 40 mensajes (~20 idas y vueltas) alcanza de
+// sobra para que Griyo mantenga el hilo de una charla — las historias viejas
+// ya quedaron guardadas como memorias, no se pierden por acortar esto.
+const MAX_MENSAJES_CONTEXTO = 40;
+
 export async function chatWithGriyo(
   ctx: ToolContext,
   nombreAbuelo: string,
@@ -22,11 +31,26 @@ export async function chatWithGriyo(
   historia: ChatMessage[],
   mensajeUsuario: string
 ): Promise<ChatResult> {
+  const historiaAcotada = historia.slice(-MAX_MENSAJES_CONTEXTO);
+
   if (isClaudeConfigured()) {
     try {
-      return await chatReal(ctx, nombreAbuelo, notasGenerales, historia, mensajeUsuario);
+      return await chatReal(ctx, nombreAbuelo, notasGenerales, historiaAcotada, mensajeUsuario);
     } catch (err) {
-      console.error("[claude] fallo API real, usando mock:", err);
+      // Importante: NO caer al mock acá. El mock responde con heurísticas
+      // simples de regex, muy distintas en tono y capacidad a una charla
+      // real — si esto pasara en silencio en medio de una conversación larga,
+      // se sentiría exactamente como "Griyo dejó de entender" o "no puede
+      // responder", sin ningún indicio de qué pasó. Mejor devolver un error
+      // visible (queda logueado) y una respuesta en el personaje de Griyo
+      // pidiendo repetir, para que la persona sepa que fue un traspié
+      // puntual y no que el asistente cambió de comportamiento.
+      console.error("[claude] fallo la API real:", err);
+      return {
+        reply: "Uy, se me cruzaron los cables un segundito. ¿Me repites lo último que me dijiste?",
+        toolCalls: [],
+        fuente: "real",
+      };
     }
   }
   return chatMock(ctx, mensajeUsuario);
@@ -58,6 +82,32 @@ function describirMomentoActual(): string {
   return `${diaSemana} ${franja}, ${String(hora).padStart(2, "0")}:${minuto}`;
 }
 
+// Fecha de hoy en dos formatos: legible (para que la lea natural) y el
+// ISO explícito entre paréntesis, como ancla exacta para que el cálculo de
+// fechas relativas ("mañana", "el martes 22") no dependa de que el modelo
+// cuente días de memoria — ver crear_recordatorio en definitions.ts.
+function describirFechaHoy(): string {
+  const ahora = new Date();
+  const legible = new Intl.DateTimeFormat("es-CL", {
+    timeZone: ZONA_HORARIA,
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(ahora);
+
+  const partesISO = new Intl.DateTimeFormat("en-CA", {
+    timeZone: ZONA_HORARIA,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(ahora);
+  const get = (tipo: string) => partesISO.find((p) => p.type === tipo)?.value ?? "";
+  const iso = `${get("year")}-${get("month")}-${get("day")}`;
+
+  return `${legible} (${iso})`;
+}
+
 async function chatReal(
   ctx: ToolContext,
   nombreAbuelo: string,
@@ -68,7 +118,12 @@ async function chatReal(
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-  const system = buildSystemPrompt(nombreAbuelo, notasGenerales, describirMomentoActual());
+  const system = buildSystemPrompt(
+    nombreAbuelo,
+    notasGenerales,
+    describirMomentoActual(),
+    describirFechaHoy()
+  );
 
   const messages: Anthropic.MessageParam[] = [
     ...historia.map((m) => ({ role: m.role, content: m.content }) as Anthropic.MessageParam),

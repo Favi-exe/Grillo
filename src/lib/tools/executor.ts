@@ -60,6 +60,7 @@ export async function executeTool(
         tipo: (input.tipo as TipoRecordatorio) ?? "otro",
         descripcion: String(input.descripcion ?? ""),
         hora: String(input.hora ?? "09:00"),
+        fecha: typeof input.fecha === "string" && input.fecha ? input.fecha : null,
         frecuencia: (input.frecuencia as "una_vez" | "diario" | "semanal") ?? "una_vez",
         creado_por: ctx.usuarioId,
         activo: true,

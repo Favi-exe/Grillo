@@ -3,6 +3,150 @@
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
 
+## Sesión 14 — Bug de "Griyo deja de responder bien" en charlas largas + notificaciones push reales para los recordatorios
+
+El usuario reportó que a veces, después de una conversación extensa, Griyo
+"dice que no puede responder o cosas así". Investigado a fondo, eran **dos
+bugs reales en `lib/ai/claude.ts`**, no uno:
+
+1. **`historia` se mandaba completa a Claude en cada mensaje, sin techo.**
+   Cada vuelta reenviaba toda la conversación acumulada — encarece cada
+   mensaje más que el anterior y, en una charla suficientemente larga,
+   puede terminar pasando el límite de contexto del modelo. Se agregó
+   `MAX_MENSAJES_CONTEXTO = 40` (~20 idas y vueltas): antes de armar los
+   `messages` para Claude, se recorta a los últimos 40. Las historias viejas
+   ya quedaron guardadas como memorias — acortar el contexto reciente no
+   pierde nada del legado, solo dosifica cuánto se manda de vuelta en cada
+   llamada.
+2. **El bug de verdad**: si la llamada real a Claude fallaba por cualquier
+   motivo (justamente, por ejemplo, contexto demasiado largo), `chatWithGriyo`
+   caía **en silencio** al modo mock — el bot de heurísticas por regex que
+   se usa cuando no hay `ANTHROPIC_API_KEY`. En medio de una charla real, el
+   cambio de personalidad es abrupto y las heurísticas del mock no entienden
+   nada de lo que se venía hablando — así es exactamente como se siente
+   "Griyo dejó de responder bien". Se sacó ese fallback: ahora, si la API
+   real fallaba estando configurada, se loguea el error y se devuelve una
+   respuesta en el personaje de Griyo pidiendo repetir ("se me cruzaron los
+   cables"), sin cambiar de comportamiento. El mock solo se usa cuando
+   `ANTHROPIC_API_KEY` no está configurada, como siempre debió ser.
+
+**Sobre "que Griyo cree los recordatorios que le piden por la app"**: el
+tool `crear_recordatorio` (`lib/tools/executor.ts`) ya estaba bien
+implementado — lo más probable es que las veces que pareció fallar hayan
+sido el mismo bug de arriba (cayendo al mock, cuyo detector de recordatorios
+es un regex mucho más limitado que lo que entiende Claude real). No se
+encontró un bug aparte acá; a confirmar con uso real ahora que el fallback
+silencioso no existe más.
+
+**El límite de 60 mensajes/24hs (`api/chat/route.ts`, de la Sesión 11)
+sigue existiendo y es intencional** — no se tocó. Si el usuario ve el
+mensaje fijo "Hoy ya charlamos bastante..." seguido, es ese límite, no un
+bug; el número es configurable con `LIMITE_MENSAJES_DIARIOS`.
+
+### Notificaciones push reales para los recordatorios
+
+El usuario notó correctamente que, siendo una app web, los recordatorios no
+podían avisar de verdad: `RecordatoriosPanel.tsx` solo compara la hora
+actual contra los recordatorios **mientras la pestaña está abierta y en
+pantalla** (polling cada 20s) — si el abuelo no está mirando la app en ese
+momento exacto, el aviso se pierde sin dejar rastro. Se construyó la
+infraestructura completa de Web Push:
+
+- **`public/sw.js`** — service worker nuevo (antes no existía ninguno en el
+  proyecto). Solo maneja `push` y `notificationclick`, no cachea nada de la
+  app.
+- **`lib/push/webPush.ts`** — envío del lado del servidor con la librería
+  `web-push` (VAPID). Limpia solas las suscripciones vencidas (404/410) que
+  devuelve el propio servicio de push del navegador.
+- **`push_subscriptions`** — tabla nueva (`supabase/schema.sql`, más su
+  espejo en `data/db.json` para modo local), una fila por dispositivo
+  suscrito, igual patrón de RLS que el resto.
+- **`hooks/useSuscripcionPush.ts` + `components/ActivarNotificaciones.tsx`**
+  — banner que aparece bajo los recordatorios pidiendo activar el permiso
+  (requiere un click real del usuario, los navegadores no dejan pedirlo
+  solo al cargar la página). Desaparece solo una vez activo.
+- **`api/push/subscribe`** (POST/DELETE) y **`api/push/enviar-pendientes`**
+  (GET, protegido con `CRON_SECRET` por header o `?secret=`) — este último
+  es el que de verdad dispara los avisos: revisa todos los recordatorios
+  activos de todos los abuelos, compara contra la hora actual (zona
+  `America/Santiago`), y no reavisa dos veces el mismo día (chequea
+  `ultima_notificacion`). Los de frecuencia `una_vez` se desactivan solos
+  después de avisar.
+
+**Decisión importante, no obvia**: `enviar-pendientes` necesita que algo lo
+llame cada 1-5 minutos para que los recordatorios salgan a la hora que
+corresponde, pero **el proyecto está en Vercel plan Hobby, que solo permite
+cron jobs una vez al día** — un cron de Vercel normal no sirve acá. No se
+armó `vercel.json` con un cron a propósito, para no generar una config que
+falla el deploy. La opción recomendada (gratis, sin cambiar de plan): un
+cron externo (ej. cron-job.org) pegándole a
+`https://<dominio>/api/push/enviar-pendientes?secret=<CRON_SECRET>` cada
+minuto. Alternativa más prolija pero paga: subir a Vercel Pro y sí usar
+`vercel.json`.
+
+**Pendiente para que esto funcione en producción (no bloqueante, son pasos
+de configuración, no código):**
+1. Cargar en Vercel (no solo en `.env.local`) las variables
+   `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` y
+   `CRON_SECRET` — ya están generadas y en `.env.local`, service_role no
+   hace falta pedirlas de nuevo.
+2. Correr el bloque nuevo de `supabase/schema.sql` (tabla
+   `push_subscriptions`) en el SQL editor del proyecto de Supabase — no se
+   corrió automático desde acá.
+3. Dar de alta el cron externo (cron-job.org u otro) contra
+   `/api/push/enviar-pendientes`, una vez que la app esté desplegada.
+4. Cosmético, no bloqueante: agregar `icon-192.png` / `badge-96.png` a
+   `/public` — el service worker ya está preparado para usarlos apenas
+   existan (ver comentario en `sw.js`).
+
+**Verificado**: `tsc --noEmit` y `next build` limpios. Con el dev server
+local: `/sw.js` sirve el archivo correcto, `/abuelo` sigue renderizando
+bien (sin dispositivo vinculado, como siempre en local), y
+`/api/push/enviar-pendientes` devuelve 401 sin el secreto y responde
+correcto con él (revisó los 11 recordatorios activos reales del store
+local). No se pudo probar el envío real de una notificación de punta a
+punta desde acá — eso requiere un dispositivo real con permiso de
+notificaciones concedido, no un navegador headless.
+
+### Recordatorios con fecha puntual ("el martes 22 a las 13:30")
+
+El usuario aclaró que quería que Griyo pudiera crear por voz no solo
+recordatorios recurrentes ("tomar agua a las 12 todos los días") sino
+también puntuales con un día específico ("tengo hora al médico el martes
+22 a las 13:30"). Y tenía razón en sospechar el hueco: `Recordatorio` nunca
+tuvo un campo de fecha calendario, solo `hora` (HH:MM) — no había dónde
+guardar el "22".
+
+- **`fecha?: string | null` (YYYY-MM-DD)** nuevo en `Recordatorio`
+  (`types.ts`, `schema.sql` con `alter table ... add column if not exists`
+  para no romper despliegues ya hechos, ambos stores).
+- **`crear_recordatorio` (definitions.ts)** ahora acepta `fecha`, con
+  instrucciones explícitas de cuándo completarla: para `una_vez` SIEMPRE
+  (si no dicen día, asumir hoy), calculada a partir de la fecha real que
+  ahora se le pasa a Griyo en el system prompt (`describirFechaHoy()` en
+  `claude.ts` — día legible + ISO exacto entre paréntesis, como ancla para
+  que el cálculo de "mañana"/"el martes 22"/"en tres días" no dependa de
+  que el modelo cuente a mano). Para `diario`/`semanal` no lleva fecha —
+  son recurrentes sin día de fin.
+- **`api/push/enviar-pendientes`**: si un recordatorio tiene `fecha`, solo
+  dispara si hoy es exactamente esa fecha (antes solo miraba la hora, sin
+  importar el día).
+- **`RecordatoriosPanel.tsx`** (vista del abuelo): la lista "de hoy" ahora
+  filtra por fecha también — uno agendado para otro día no aparece hasta
+  que llegue esa fecha, para no confundir.
+- **`RecordatoriosFamiliar.tsx`**: se sumó un selector de fecha en el
+  formulario (solo visible con frecuencia "Una vez"), y la fecha se
+  muestra en cada fila de la lista cuando existe.
+
+**Verificado con la API real de Claude, no solo leyendo el prompt**: script
+descartable que mandó 4 mensajes de prueba contra el system prompt y tool
+schema reales, simulando "hoy es lunes 21 de septiembre de 2026". Los
+cuatro salieron exactos: "el martes 22 a las 13:30" → `fecha: 2026-09-22`,
+`frecuencia: una_vez`; "todos los días a las 12" → `diario`, sin `fecha`;
+"a las 18:00" sin mencionar día → `una_vez` con `fecha` de HOY (2026-09-21);
+"mañana... a las 10" → `fecha: 2026-09-22`. Script borrado al terminar,
+`tsc`/`next build` limpios de nuevo después de estos cambios.
+
 ## Sesión 13 — Tarjetas de historia con carita, auto-registro diario y pregunta de la semana
 
 Seguimiento directo de la Sesión 12, con tres pedidos inspirados en apps

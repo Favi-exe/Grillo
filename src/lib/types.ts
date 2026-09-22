@@ -26,6 +26,12 @@ export interface Recordatorio {
   tipo: TipoRecordatorio;
   descripcion: string;
   hora: string; // "HH:MM" formato 24h
+  // Fecha calendario ("YYYY-MM-DD") para un recordatorio de un día puntual,
+  // ej. "el martes 22 a las 13:30". null/undefined = sin día fijo: dispara
+  // la próxima vez que la hora coincida (uso típico de "diario"/"semanal").
+  // Para "una_vez" siempre debería venir con fecha (Griyo la completa sola
+  // con el día de hoy si la persona no especificó uno) — ver definitions.ts.
+  fecha?: string | null;
   frecuencia: "una_vez" | "diario" | "semanal";
   creado_por: string; // usuario id o "griyo"
   activo: boolean;
@@ -96,4 +102,13 @@ export interface AbueloDispositivo {
   creado_por?: string | null;
   created_at: string;
   ultimo_acceso?: string | null;
+}
+
+export interface PushSubscriptionRow {
+  id: string;
+  abuelo_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  created_at: string;
 }
