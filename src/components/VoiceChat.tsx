@@ -46,6 +46,7 @@ export default function VoiceChat() {
   const { disponible: ttsDisponible, hablando, hablar } = useSpeechSynthesis("es-419");
 
   const ultimaTranscripcionEnviada = useRef<string>("");
+  const ultimoMensajeFueVoz = useRef(false);
 
   useEffect(() => {
     setEstado(escuchando ? "escuchando" : estado === "escuchando" ? "idle" : estado);
@@ -62,6 +63,7 @@ export default function VoiceChat() {
   useEffect(() => {
     if (!escuchando && transcripcion && transcripcion !== ultimaTranscripcionEnviada.current) {
       ultimaTranscripcionEnviada.current = transcripcion;
+      ultimoMensajeFueVoz.current = true;
       enviarMensaje(transcripcion);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,10 +73,32 @@ export default function VoiceChat() {
     finRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [historia, estado]);
 
+  // Conversación "audio por audio": si el último mensaje lo mandaste
+  // hablando, apenas Griyo termina de responder volvemos a escuchar solos,
+  // sin que haya que tocar el botón de nuevo en cada turno.
+  const estadoAnteriorRef = useRef<Estado>("idle");
+  useEffect(() => {
+    const veniaHablando = estadoAnteriorRef.current === "hablando";
+    estadoAnteriorRef.current = estado;
+    if (veniaHablando && estado === "idle" && ultimoMensajeFueVoz.current && sttDisponible) {
+      iniciar();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [estado]);
+
   async function enviarMensaje(texto: string) {
     if (!texto.trim()) return;
     setErrorMsg(null);
     setEstado("pensando");
+
+    // Mostramos el mensaje del usuario de inmediato, sin esperar la
+    // respuesta del servidor — antes los dos aparecían recién juntos cuando
+    // volvía el fetch completo, y en una charla larga quedaba muy raro.
+    const historiaConMensaje = [
+      ...historia,
+      { role: "user" as const, content: texto, timestamp: new Date().toISOString() },
+    ];
+    setHistoria(historiaConMensaje);
 
     try {
       const res = await fetchAbuelo("/api/chat", {
@@ -142,6 +166,9 @@ export default function VoiceChat() {
     e.preventDefault();
     const input = e.currentTarget.elements.namedItem("mensaje") as HTMLInputElement;
     if (input.value.trim()) {
+      // Si escribe en vez de hablar, no seguimos escuchando solos después —
+      // eso solo tiene sentido cuando la charla viene siendo por voz.
+      ultimoMensajeFueVoz.current = false;
       enviarMensaje(input.value.trim());
       input.value = "";
     }
@@ -162,7 +189,7 @@ export default function VoiceChat() {
           en el resto de la interfaz vive en tonos arena; este gradiente
           aparece solo aquí para señalar "este es el corazón de Griyo". */}
       <div className="relative rounded-5xl bg-dusk p-5 sm:p-7 shadow-warm-lg">
-        <div className="w-full bg-sand-50/95 backdrop-blur-sm rounded-4xl shadow-inner p-4 mb-6 min-h-[180px] flex flex-col gap-3">
+        <div className="w-full bg-sand-50/95 backdrop-blur-sm rounded-4xl shadow-inner p-4 mb-6 min-h-[180px] max-h-[50vh] overflow-y-auto flex flex-col gap-3">
           {historia.length === 0 && (
             <p className="text-center text-sand-700 py-8 text-lg">
               Toca el botón y empieza a hablar con Griyo.

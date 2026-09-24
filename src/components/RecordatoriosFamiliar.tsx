@@ -67,7 +67,7 @@ export default function RecordatoriosFamiliar() {
   const [descripcion, setDescripcion] = useState("");
   const [hora, setHora] = useState("09:00");
   const [fecha, setFecha] = useState("");
-  const [frecuencia, setFrecuencia] = useState<"una_vez" | "diario" | "semanal">("diario");
+  const [frecuencia, setFrecuencia] = useState<"una_vez" | "diario" | "semanal">("una_vez");
   const [guardando, setGuardando] = useState(false);
 
   async function cargar() {

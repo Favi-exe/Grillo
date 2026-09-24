@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { iniciarSesion, isSupabaseAuthConfigured } from "@/lib/auth/familiarSession";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
@@ -27,9 +27,34 @@ export default function RegistroMayorPage() {
   const [passwordGenerada, setPasswordGenerada] = useState<string | null>(null);
 
   const { disponible: ttsDisponible, hablar } = useSpeechSynthesis("es-419");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Misma voz cálida (ElevenLabs) que usa el chat principal — antes esta
+  // pantalla usaba directo la síntesis nativa del navegador, que suena
+  // robótica y es la primera voz que escucha la persona al crear su cuenta.
+  async function narrar(texto: string) {
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto }),
+      });
+      const data = await res.json();
+      if (data.audioBase64) {
+        audioRef.current?.pause();
+        const audio = new Audio(`data:${data.mimeType};base64,${data.audioBase64}`);
+        audioRef.current = audio;
+        await audio.play();
+        return;
+      }
+    } catch (err) {
+      console.error("[registro-mayor tts]", err);
+    }
+    if (ttsDisponible) hablar(texto);
+  }
 
   useEffect(() => {
-    if (ttsDisponible) hablar(NARRACION[paso]);
+    narrar(NARRACION[paso]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paso]);
 

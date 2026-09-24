@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
  * esta ruta empieza a devolver audio real en base64 sin tocar nada más.
  */
 
-const VOZ_CALIDA_ID = process.env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL"; // "Bella", voz cálida por defecto
+const VOZ_CALIDA_ID = process.env.ELEVENLABS_VOICE_ID || "cAzLs1rIO47XcpNAlQ2c"; // "Sandra", acento chileno
 
 export async function POST(req: NextRequest) {
   const { texto } = await req.json();
