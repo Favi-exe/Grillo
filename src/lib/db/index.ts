@@ -12,6 +12,8 @@ import type {
   RegistroAnimo,
   AbueloDispositivo,
   PushSubscriptionRow,
+  Foto,
+  PreguntaFamilia,
 } from "@/lib/types";
 
 /**
@@ -196,4 +198,47 @@ export async function eliminarPushSubscriptionPorEndpoint(endpoint: string): Pro
   return usandoSupabase()
     ? supabaseStore.eliminarPushSubscriptionPorEndpoint(endpoint)
     : localStore.eliminarPushSubscriptionPorEndpoint(endpoint);
+}
+
+export async function createFoto(input: Omit<Foto, "id" | "created_at">): Promise<Foto> {
+  return usandoSupabase() ? supabaseStore.createFoto(input) : localStore.createFoto(input);
+}
+export async function listFotos(abueloId: string): Promise<Foto[]> {
+  return usandoSupabase() ? supabaseStore.listFotos(abueloId) : localStore.listFotos(abueloId);
+}
+export async function getFoto(id: string): Promise<Foto | undefined> {
+  return usandoSupabase() ? supabaseStore.getFoto(id) : localStore.getFoto(id);
+}
+export async function deleteFoto(id: string): Promise<boolean> {
+  return usandoSupabase() ? supabaseStore.deleteFoto(id) : localStore.deleteFoto(id);
+}
+
+export async function createPreguntaFamilia(
+  input: Omit<PreguntaFamilia, "id" | "created_at" | "estado" | "respondida_at">
+): Promise<PreguntaFamilia> {
+  return usandoSupabase()
+    ? supabaseStore.createPreguntaFamilia(input)
+    : localStore.createPreguntaFamilia(input);
+}
+export async function listPreguntasFamilia(abueloId: string): Promise<PreguntaFamilia[]> {
+  return usandoSupabase()
+    ? supabaseStore.listPreguntasFamilia(abueloId)
+    : localStore.listPreguntasFamilia(abueloId);
+}
+export async function getPreguntaFamilia(id: string): Promise<PreguntaFamilia | undefined> {
+  return usandoSupabase()
+    ? supabaseStore.getPreguntaFamilia(id)
+    : localStore.getPreguntaFamilia(id);
+}
+export async function marcarPreguntaFamiliaRespondida(
+  id: string
+): Promise<PreguntaFamilia | undefined> {
+  return usandoSupabase()
+    ? supabaseStore.marcarPreguntaFamiliaRespondida(id)
+    : localStore.marcarPreguntaFamiliaRespondida(id);
+}
+export async function deletePreguntaFamilia(id: string): Promise<boolean> {
+  return usandoSupabase()
+    ? supabaseStore.deletePreguntaFamilia(id)
+    : localStore.deletePreguntaFamilia(id);
 }

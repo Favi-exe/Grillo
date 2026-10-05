@@ -82,6 +82,23 @@ export async function requireSesionSupabase(
   return { authUserId: data.user.id, email: data.user.email ?? null };
 }
 
+/**
+ * Para rutas que tanto la persona mayor como su familia pueden usar (fotos,
+ * preguntas). Prueba primero el acceso del abuelo y cae al del familiar;
+ * `rol` dice cuál de los dos fue, para que la ruta decida qué se permite.
+ */
+export async function requireAbueloOFamiliar(
+  req: NextRequest
+): Promise<{ abueloId: string; rol: "abuelo" | "familiar"; usuarioId: string | null }> {
+  try {
+    const { abueloId } = await requireAbueloAccess(req);
+    return { abueloId, rol: "abuelo", usuarioId: null };
+  } catch {
+    const familiar = await requireFamiliarConAbuelo(req);
+    return { abueloId: familiar.abueloId, rol: "familiar", usuarioId: familiar.usuarioId };
+  }
+}
+
 /** Igual que requireFamiliar, pero exige que ya tenga un abuelo vinculado. */
 export async function requireFamiliarConAbuelo(
   req: NextRequest

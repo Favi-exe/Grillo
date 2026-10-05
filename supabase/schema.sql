@@ -225,5 +225,60 @@ grant select, insert, update, delete on abuelos, usuarios, recordatorios, memori
 alter default privileges in schema public grant all on tables to service_role;
 alter default privileges in schema public grant all on sequences to service_role;
 
+-- ----------------------------------------------------------------------
+-- Fotos del libro y preguntas de la familia (octubre 2026).
+-- Para un proyecto ya desplegado, correr solo este bloque en el SQL editor.
+-- ----------------------------------------------------------------------
+
+-- Una foto que la persona mayor o un familiar suma al libro de Legado Vivo.
+-- El archivo vive en el bucket privado "fotos-legado"; acá solo la ruta.
+create table if not exists fotos (
+  id uuid primary key default uuid_generate_v4(),
+  abuelo_id uuid not null references abuelos(id) on delete cascade,
+  storage_path text not null,
+  descripcion text,
+  subida_por_rol text not null check (subida_por_rol in ('abuelo', 'familiar')),
+  subida_por_nombre text,
+  created_at timestamptz not null default now()
+);
+
+-- Preguntas que un familiar deja armadas para que Griyo se las muestre a la
+-- persona mayor.
+create table if not exists preguntas_familia (
+  id uuid primary key default uuid_generate_v4(),
+  abuelo_id uuid not null references abuelos(id) on delete cascade,
+  texto text not null,
+  autor_nombre text not null,
+  creada_por uuid references usuarios(id) on delete set null,
+  estado text not null default 'pendiente' check (estado in ('pendiente', 'respondida')),
+  created_at timestamptz not null default now(),
+  respondida_at timestamptz
+);
+
+create index if not exists idx_fotos_abuelo on fotos(abuelo_id);
+create index if not exists idx_preguntas_familia_abuelo on preguntas_familia(abuelo_id);
+
+alter table fotos enable row level security;
+alter table preguntas_familia enable row level security;
+
+drop policy if exists fotos_mi_familia on fotos;
+create policy fotos_mi_familia on fotos for all to authenticated
+  using (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()))
+  with check (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()));
+
+drop policy if exists preguntas_familia_mi_familia on preguntas_familia;
+create policy preguntas_familia_mi_familia on preguntas_familia for all to authenticated
+  using (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()))
+  with check (abuelo_id in (select abuelo_id from usuarios where auth_user_id = auth.uid()));
+
+grant all on fotos, preguntas_familia to service_role;
+grant select, insert, update, delete on fotos, preguntas_familia to authenticated;
+
+-- Bucket privado para los archivos. Si este insert falla por permisos, la app
+-- lo crea sola la primera vez que se sube una foto.
+insert into storage.buckets (id, name, public)
+values ('fotos-legado', 'fotos-legado', false)
+on conflict (id) do nothing;
+
 -- Sin seed de datos de ejemplo a propósito: los usuarios reales (abuelo +
 -- familiar) se crean desde la app a través del flujo de registro/onboarding.

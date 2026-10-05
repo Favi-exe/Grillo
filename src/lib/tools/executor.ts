@@ -3,6 +3,8 @@ import {
   listRecordatorios,
   createMemoria,
   listMemorias,
+  getPreguntaFamilia,
+  marcarPreguntaFamiliaRespondida,
 } from "@/lib/db";
 import { getClima } from "@/lib/ai/weather";
 import { indexarMemoria, buscarMemoriasSimilares } from "@/lib/ai/pinecone";
@@ -116,6 +118,17 @@ export async function executeTool(
       const ciudad = typeof input.ciudad === "string" && input.ciudad ? input.ciudad : undefined;
       const clima = await getClima(ciudad);
       return { nombre, input, resultado: clima };
+    }
+
+    case "marcar_pregunta_familia_respondida": {
+      const id = String(input.pregunta_id ?? "");
+      const pregunta = id ? await getPreguntaFamilia(id) : undefined;
+      // Solo preguntas de ESTA persona — el id lo escribe el modelo, no se confía.
+      if (!pregunta || pregunta.abuelo_id !== ctx.abueloId) {
+        return { nombre, input, resultado: { error: "Pregunta no encontrada" } };
+      }
+      await marcarPreguntaFamiliaRespondida(pregunta.id);
+      return { nombre, input, resultado: { ok: true } };
     }
 
     default:

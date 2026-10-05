@@ -11,6 +11,8 @@ import type {
   RegistroAnimo,
   AbueloDispositivo,
   PushSubscriptionRow,
+  Foto,
+  PreguntaFamilia,
 } from "@/lib/types";
 
 export const supabaseStore = {
@@ -364,6 +366,88 @@ export const supabaseStore = {
       .from("push_subscriptions")
       .delete()
       .eq("endpoint", endpoint);
+    if (error) throw error;
+    return true;
+  },
+
+  async createFoto(input: Omit<Foto, "id" | "created_at">): Promise<Foto> {
+    const nueva = { ...input, id: randomUUID(), created_at: new Date().toISOString() };
+    const { data, error } = await getSupabaseClient().from("fotos").insert(nueva).select().single();
+    if (error) throw error;
+    return data as Foto;
+  },
+  async listFotos(abueloId: string): Promise<Foto[]> {
+    const { data, error } = await getSupabaseClient()
+      .from("fotos")
+      .select("*")
+      .eq("abuelo_id", abueloId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return data as Foto[];
+  },
+  async getFoto(id: string): Promise<Foto | undefined> {
+    const { data, error } = await getSupabaseClient()
+      .from("fotos")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return (data as Foto) ?? undefined;
+  },
+  async deleteFoto(id: string): Promise<boolean> {
+    const { error } = await getSupabaseClient().from("fotos").delete().eq("id", id);
+    if (error) throw error;
+    return true;
+  },
+
+  async createPreguntaFamilia(
+    input: Omit<PreguntaFamilia, "id" | "created_at" | "estado" | "respondida_at">
+  ): Promise<PreguntaFamilia> {
+    const nueva = {
+      ...input,
+      id: randomUUID(),
+      estado: "pendiente",
+      created_at: new Date().toISOString(),
+      respondida_at: null,
+    };
+    const { data, error } = await getSupabaseClient()
+      .from("preguntas_familia")
+      .insert(nueva)
+      .select()
+      .single();
+    if (error) throw error;
+    return data as PreguntaFamilia;
+  },
+  async listPreguntasFamilia(abueloId: string): Promise<PreguntaFamilia[]> {
+    const { data, error } = await getSupabaseClient()
+      .from("preguntas_familia")
+      .select("*")
+      .eq("abuelo_id", abueloId)
+      .order("created_at", { ascending: true });
+    if (error) throw error;
+    return data as PreguntaFamilia[];
+  },
+  async getPreguntaFamilia(id: string): Promise<PreguntaFamilia | undefined> {
+    const { data, error } = await getSupabaseClient()
+      .from("preguntas_familia")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return (data as PreguntaFamilia) ?? undefined;
+  },
+  async marcarPreguntaFamiliaRespondida(id: string): Promise<PreguntaFamilia | undefined> {
+    const { data, error } = await getSupabaseClient()
+      .from("preguntas_familia")
+      .update({ estado: "respondida", respondida_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .maybeSingle();
+    if (error) throw error;
+    return (data as PreguntaFamilia) ?? undefined;
+  },
+  async deletePreguntaFamilia(id: string): Promise<boolean> {
+    const { error } = await getSupabaseClient().from("preguntas_familia").delete().eq("id", id);
     if (error) throw error;
     return true;
   },

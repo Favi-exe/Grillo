@@ -104,6 +104,31 @@ export interface AbueloDispositivo {
   ultimo_acceso?: string | null;
 }
 
+// Foto que se suma al libro de Legado Vivo. El archivo vive en el storage
+// (Supabase Storage o disco local en modo mock); acá solo queda la ruta.
+export interface Foto {
+  id: string;
+  abuelo_id: string;
+  storage_path: string;
+  descripcion?: string | null;
+  subida_por_rol: "abuelo" | "familiar";
+  subida_por_nombre?: string | null;
+  created_at: string;
+}
+
+// Pregunta que un familiar deja armada para que Griyo se la muestre a la
+// persona mayor (tarjeta en /abuelo y, con naturalidad, dentro de la charla).
+export interface PreguntaFamilia {
+  id: string;
+  abuelo_id: string;
+  texto: string;
+  autor_nombre: string;
+  creada_por?: string | null;
+  estado: "pendiente" | "respondida";
+  created_at: string;
+  respondida_at?: string | null;
+}
+
 export interface PushSubscriptionRow {
   id: string;
   abuelo_id: string;

@@ -1,17 +1,43 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { EMOCIONES } from "@/lib/emociones";
 
+export interface PreguntaFamiliaPrompt {
+  id: string;
+  texto: string;
+  autor_nombre: string;
+}
+
+// Preguntas que la familia dejó armadas para esta persona. Se le muestran
+// también en una tarjeta de su pantalla (ver PreguntaDeLaFamilia.tsx); acá
+// Griyo las puede traer a la charla con naturalidad si surge el momento.
+function bloquePreguntasFamilia(
+  nombreAbuelo: string,
+  preguntas?: PreguntaFamiliaPrompt[]
+): string {
+  if (!preguntas || preguntas.length === 0) return "";
+  const lista = preguntas
+    .map((p) => `- [id: ${p.id}] "${p.texto}" (de ${p.autor_nombre})`)
+    .join("\n");
+  return `
+## Preguntas que la familia quiere hacerle
+Su familia dejó estas preguntas para ${nombreAbuelo}, todavía sin responder:
+${lista}
+Si la charla fluye y es un buen momento, puedes invitarlo con calidez a contestar UNA de ellas (por ejemplo "${preguntas[0].autor_nombre} tenía curiosidad por saber..."), y nunca más de una por conversación ni de forma insistente. Cuando la responda, guarda esa historia con guardar_memoria y después llama a marcar_pregunta_familia_respondida con el id de la pregunta.
+`;
+}
+
 export function buildSystemPrompt(
   nombreAbuelo: string,
   notasGenerales?: string | null,
   momentoActual?: string | null,
-  fechaHoy?: string | null
+  fechaHoy?: string | null,
+  preguntasFamilia?: PreguntaFamiliaPrompt[]
 ): string {
   return `Eres Griyo, un acompañante conversacional cálido para adultos mayores. Ahora estás hablando con ${nombreAbuelo}.
 ${notasGenerales ? `Datos que sabes de ${nombreAbuelo}: ${notasGenerales}` : ""}
 ${momentoActual ? `Ahora mismo, del lado de ${nombreAbuelo}, es ${momentoActual}. Ten esto en cuenta para saludar y referirte al momento del día (por ejemplo, no digas "buenos días" ni preguntes cómo va la mañana si ya es de tarde o de noche).` : ""}
 ${fechaHoy ? `Hoy es ${fechaHoy}. Usa esto para calcular cualquier fecha relativa que mencionen ("mañana", "el próximo martes", "en tres días", "el 22") al crear un recordatorio — ver la herramienta crear_recordatorio.` : ""}
-
+${bloquePreguntasFamilia(nombreAbuelo, preguntasFamilia)}
 ## Cómo hablas
 - Español neutro, SIEMPRE. Usa "tú/tu" y sus formas verbales (puedes, quieres, tienes, cuéntame). Tienes terminantemente PROHIBIDO usar voseo argentino o uruguayo: nunca "vos", "tenés", "querés", "contame", "sabés", "sos", ni el imperativo con tilde final ("contá", "mirá", "decí"). Tampoco uses otros regionalismos marcados (che, boludo, pibe, laburo, etc.) ni acento de ningún país en particular — el público es de Chile y de otros países hispanohablantes, y el tono debe sonar neutro para todos.
 - Tono cercano, paciente y respetuoso, nunca infantilizante. Hablas como alguien de confianza, no como un asistente robótico.
@@ -26,6 +52,7 @@ Tienes acceso a estas herramientas y las usas tú mismo cuando corresponde, sin 
 - guardar_memoria: cuando cuentan una anécdota, un recuerdo, una historia de su vida, o expresan un sentimiento significativo. Hazlo de forma DISCRETA — nunca digas "voy a guardar esto" ni lo anuncies, simplemente sigue la charla con naturalidad mientras por dentro guardas la memoria.
 - buscar_memorias: si quieres recordar algo que la persona ya te contó antes, para retomarlo en la charla.
 - consultar_clima: cuando preguntan por el clima o el tiempo.
+- marcar_pregunta_familia_respondida: cuando la persona acaba de contestar una de las preguntas de su familia (si hay alguna listada más abajo).
 
 De vez en cuando, sin forzar ni sonar a cuestionario, puedes invitar suavemente a compartir un recuerdo (por ejemplo "¿me cuentas cómo conociste a tu esposa?" o "¿cómo era tu pueblo cuando eras niño?"). No lo hagas en cada mensaje — que surja natural, como en una charla real con alguien que te importa.
 
@@ -142,6 +169,18 @@ export const GRIYO_TOOLS: Anthropic.Tool[] = [
       properties: {
         ciudad: { type: "string", description: "Ciudad a consultar, si no se especifica usar la ciudad por defecto" },
       },
+    },
+  },
+  {
+    name: "marcar_pregunta_familia_respondida",
+    description:
+      "Marca como respondida una de las preguntas que la familia dejó para la persona. Úsala solo después de que la persona la haya contestado de verdad en la charla, y usa el id exacto que aparece en la lista de preguntas del prompt.",
+    input_schema: {
+      type: "object",
+      properties: {
+        pregunta_id: { type: "string", description: "El id de la pregunta de la familia que ya fue respondida" },
+      },
+      required: ["pregunta_id"],
     },
   },
 ];

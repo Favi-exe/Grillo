@@ -16,9 +16,9 @@ export async function GET(req: NextRequest) {
     }
 
     const libro = await armarLibroLegado(abueloId, abuelo.nombre);
-    if (libro.totalHistorias === 0) {
+    if (libro.totalHistorias === 0 && libro.fotos.length === 0) {
       return NextResponse.json(
-        { error: "Todavía no hay historias guardadas para armar el libro." },
+        { error: "Todavía no hay historias ni fotos guardadas para armar el libro." },
         { status: 400 }
       );
     }

@@ -14,6 +14,8 @@ import EstadoCarlos from "@/components/EstadoCarlos";
 import VincularDispositivo from "@/components/VincularDispositivo";
 import DispositivosVinculados from "@/components/DispositivosVinculados";
 import LegadoVivoLibro from "@/components/LegadoVivoLibro";
+import FotosLegado from "@/components/FotosLegado";
+import PreguntasFamilia from "@/components/PreguntasFamilia";
 import OnboardingPerfil from "@/components/OnboardingPerfil";
 import OnboardingAbuelo from "@/components/OnboardingAbuelo";
 import { LogOutIcon } from "@/components/icons";
@@ -119,8 +121,14 @@ export default function FamiliaPage() {
         <div className="opacity-0 animate-fade-rise stagger-2">
           <PreguntaMemoria abueloNombre={abuelo?.nombre ?? ""} />
         </div>
+        <div className="opacity-0 animate-fade-rise stagger-2">
+          <PreguntasFamilia nombrePersona={abuelo?.nombre ?? ""} />
+        </div>
         <div className="opacity-0 animate-fade-rise stagger-3">
           <MemoriasList />
+        </div>
+        <div className="opacity-0 animate-fade-rise stagger-3">
+          <FotosLegado modo="familiar" nombrePersona={abuelo?.nombre} />
         </div>
         <div className="opacity-0 animate-fade-rise stagger-3">
           <LegadoVivoLibro abueloNombre={abuelo?.nombre ?? ""} />

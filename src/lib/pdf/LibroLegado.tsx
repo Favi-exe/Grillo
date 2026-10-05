@@ -1,5 +1,5 @@
-import { Document, Page, View, Text, Svg, Path, Circle, Ellipse, StyleSheet } from "@react-pdf/renderer";
-import type { LibroLegado } from "@/lib/legado";
+import { Document, Page, View, Text, Image, Svg, Path, Circle, Ellipse, StyleSheet } from "@react-pdf/renderer";
+import type { FotoLibro, LibroLegado } from "@/lib/legado";
 
 /**
  * El PDF del libro de Legado Vivo. Fuentes propias del PDF (Times-Roman /
@@ -123,6 +123,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     height: "100%",
   },
+  fotoBloque: { marginBottom: 18 },
+  fotoImagen: {
+    width: "100%",
+    height: 150,
+    objectFit: "contain",
+    backgroundColor: SAND_BG,
+    borderRadius: 4,
+  },
+  fotoPie: {
+    fontFamily: "Times-Italic",
+    fontSize: 10.5,
+    color: DUSK,
+    lineHeight: 1.45,
+    marginTop: 6,
+    textAlign: "center",
+  },
+  fotoMeta: {
+    fontFamily: "Helvetica",
+    fontSize: 8,
+    color: EMBER,
+    textAlign: "center",
+    marginTop: 2,
+    letterSpacing: 0.8,
+  },
+
   cierreTexto: {
     fontFamily: "Times-Italic",
     fontSize: 13,
@@ -137,6 +162,13 @@ function fechaLegible(iso: string): string {
   const d = new Date(iso);
   const texto = d.toLocaleDateString("es-419", { day: "numeric", month: "long", year: "numeric" });
   return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+// De a dos fotos por página: en A5 es lo que deja ver cada una con aire.
+function agruparFotos(fotos: FotoLibro[]): FotoLibro[][] {
+  const paginas: FotoLibro[][] = [];
+  for (let i = 0; i < fotos.length; i += 2) paginas.push(fotos.slice(i, i + 2));
+  return paginas;
 }
 
 function CricketMarkPdf({ size = 56, color = EMBER }: { size?: number; color?: string }) {
@@ -165,6 +197,14 @@ function CricketMarkPdf({ size = 56, color = EMBER }: { size?: number; color?: s
 
 export function LibroLegadoDocument({ libro }: { libro: LibroLegado }) {
   const hoy = fechaLegible(new Date().toISOString());
+  const partesResumen: string[] = [];
+  if (libro.totalHistorias > 0) {
+    partesResumen.push(`${libro.totalHistorias} historia${libro.totalHistorias === 1 ? "" : "s"}`);
+  }
+  if (libro.fotos.length > 0) {
+    partesResumen.push(`${libro.fotos.length} foto${libro.fotos.length === 1 ? "" : "s"}`);
+  }
+  const resumen = `${partesResumen.join(" y ")} recopilada${libro.totalHistorias + libro.fotos.length === 1 ? "" : "s"}`;
 
   return (
     <Document title={`El Legado Vivo de ${libro.nombreAbuelo}`} author="Griyo">
@@ -174,7 +214,7 @@ export function LibroLegadoDocument({ libro }: { libro: LibroLegado }) {
         </View>
         <Text style={styles.tituloLibro}>El Legado Vivo{"\n"}de {libro.nombreAbuelo}</Text>
         <Text style={styles.subtituloLibro}>
-          {libro.totalHistorias} historia{libro.totalHistorias === 1 ? "" : "s"} recopiladas hasta {hoy}
+          {resumen} hasta {hoy}
         </Text>
         <Text style={styles.dedicatoria}>
           Este es un pequeño libro con algunas de las historias que {libro.nombreAbuelo} fue
@@ -204,6 +244,34 @@ export function LibroLegadoDocument({ libro }: { libro: LibroLegado }) {
             </View>
           ))}
 
+          <Text
+            style={styles.numeroPagina}
+            render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}
+            fixed
+          />
+        </Page>
+      ))}
+
+      {agruparFotos(libro.fotos).map((grupo, i) => (
+        <Page key={`fotos-${i}`} size="A5" style={styles.paginaCapitulo}>
+          {i === 0 && (
+            <>
+              <Text style={styles.eyebrow}>RECUERDOS EN IMÁGENES</Text>
+              <Text style={styles.tituloCapitulo}>Álbum de fotos</Text>
+            </>
+          )}
+          {grupo.map((foto, j) => (
+            <View key={j} style={styles.fotoBloque} wrap={false}>
+              {/* Image de react-pdf, no <img>: no tiene prop alt (el texto va en el pie). */}
+              {/* eslint-disable-next-line jsx-a11y/alt-text */}
+              <Image src={{ data: foto.data, format: foto.formato }} style={styles.fotoImagen} />
+              {foto.descripcion ? <Text style={styles.fotoPie}>{foto.descripcion}</Text> : null}
+              <Text style={styles.fotoMeta}>
+                {fechaLegible(foto.fecha).toUpperCase()}
+                {foto.subidaPor ? ` · ${foto.subidaPor.toUpperCase()}` : ""}
+              </Text>
+            </View>
+          ))}
           <Text
             style={styles.numeroPagina}
             render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`}

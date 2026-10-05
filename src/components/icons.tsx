@@ -168,6 +168,25 @@ export function PlusIcon(props: IconProps) {
   );
 }
 
+export function CameraIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </Base>
+  );
+}
+
+export function VolumeIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" />
+      <path d="M15.5 9a4 4 0 0 1 0 6" />
+      <path d="M18 6.5a8 8 0 0 1 0 11" />
+    </Base>
+  );
+}
+
 export function TrashIcon(props: IconProps) {
   return (
     <Base {...props}>

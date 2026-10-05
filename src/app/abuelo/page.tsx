@@ -11,6 +11,8 @@ import ActivarNotificaciones from "@/components/ActivarNotificaciones";
 import BotonEmergencia from "@/components/BotonEmergencia";
 import RegistroAnimoAbuelo from "@/components/RegistroAnimoAbuelo";
 import PreguntaSemana from "@/components/PreguntaSemana";
+import PreguntaDeLaFamilia from "@/components/PreguntaDeLaFamilia";
+import FotosLegado from "@/components/FotosLegado";
 import InvitarFamiliar from "@/components/InvitarFamiliar";
 import { CricketMark } from "@/components/icons";
 import type { Abuelo } from "@/lib/types";
@@ -109,6 +111,10 @@ export default function AbueloPage() {
       </div>
 
       <div className="opacity-0 animate-fade-rise stagger-1">
+        <PreguntaDeLaFamilia />
+      </div>
+
+      <div className="opacity-0 animate-fade-rise stagger-1">
         <PreguntaSemana />
       </div>
 
@@ -118,6 +124,9 @@ export default function AbueloPage() {
       <div className="opacity-0 animate-fade-rise stagger-3">
         <RecordatoriosPanel />
         <ActivarNotificaciones />
+      </div>
+      <div className="mt-6 opacity-0 animate-fade-rise stagger-3">
+        <FotosLegado modo="abuelo" />
       </div>
       <div className="max-w-2xl mx-auto mt-6 opacity-0 animate-fade-rise stagger-3">
         <InvitarFamiliar />

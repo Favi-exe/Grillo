@@ -1,5 +1,6 @@
 import { buildSystemPrompt, GRIYO_TOOLS } from "@/lib/tools/definitions";
 import { executeTool, type ToolContext, type ToolExecutionResult } from "@/lib/tools/executor";
+import { listPreguntasFamilia } from "@/lib/db";
 import type { ChatMessage } from "@/lib/types";
 import type Anthropic from "@anthropic-ai/sdk";
 
@@ -118,11 +119,21 @@ async function chatReal(
   const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+  // Si falla la consulta, el chat sigue sin las preguntas de la familia —
+  // nunca debe romper la charla por esto.
+  const preguntasFamilia = await listPreguntasFamilia(ctx.abueloId)
+    .then((todas) => todas.filter((p) => p.estado === "pendiente").slice(0, 3))
+    .catch((err) => {
+      console.error("[claude] no se pudieron leer las preguntas de la familia:", err);
+      return [];
+    });
+
   const system = buildSystemPrompt(
     nombreAbuelo,
     notasGenerales,
     describirMomentoActual(),
-    describirFechaHoy()
+    describirFechaHoy(),
+    preguntasFamilia
   );
 
   const messages: Anthropic.MessageParam[] = [

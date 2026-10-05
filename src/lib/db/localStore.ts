@@ -12,6 +12,8 @@ import type {
   RegistroAnimo,
   AbueloDispositivo,
   PushSubscriptionRow,
+  Foto,
+  PreguntaFamilia,
 } from "@/lib/types";
 
 interface DbShape {
@@ -25,6 +27,8 @@ interface DbShape {
   registros_animo: RegistroAnimo[];
   abuelo_dispositivos: AbueloDispositivo[];
   push_subscriptions: PushSubscriptionRow[];
+  fotos: Foto[];
+  preguntas_familia: PreguntaFamilia[];
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -45,6 +49,8 @@ function vacio(): DbShape {
     registros_animo: [],
     abuelo_dispositivos: [],
     push_subscriptions: [],
+    fotos: [],
+    preguntas_familia: [],
   };
 }
 
@@ -66,6 +72,8 @@ function ensureDb(): DbShape {
     if (!parsed.registros_animo) parsed.registros_animo = [];
     if (!parsed.abuelo_dispositivos) parsed.abuelo_dispositivos = [];
     if (!parsed.push_subscriptions) parsed.push_subscriptions = [];
+    if (!parsed.fotos) parsed.fotos = [];
+    if (!parsed.preguntas_familia) parsed.preguntas_familia = [];
     return parsed as DbShape;
   } catch {
     const initial = vacio();
@@ -336,5 +344,73 @@ export const localStore = {
     db.push_subscriptions = db.push_subscriptions.filter((s) => s.endpoint !== endpoint);
     save(db);
     return db.push_subscriptions.length < before;
+  },
+
+  // --- Fotos del libro ---
+  createFoto(input: Omit<Foto, "id" | "created_at">): Foto {
+    const db = ensureDb();
+    const nueva: Foto = { ...input, id: randomUUID(), created_at: new Date().toISOString() };
+    db.fotos.push(nueva);
+    save(db);
+    return nueva;
+  },
+  listFotos(abueloId: string): Foto[] {
+    return ensureDb()
+      .fotos.filter((f) => f.abuelo_id === abueloId)
+      .sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+  },
+  getFoto(id: string): Foto | undefined {
+    return ensureDb().fotos.find((f) => f.id === id);
+  },
+  deleteFoto(id: string): boolean {
+    const db = ensureDb();
+    const before = db.fotos.length;
+    db.fotos = db.fotos.filter((f) => f.id !== id);
+    save(db);
+    return db.fotos.length < before;
+  },
+
+  // --- Preguntas de la familia ---
+  createPreguntaFamilia(
+    input: Omit<PreguntaFamilia, "id" | "created_at" | "estado" | "respondida_at">
+  ): PreguntaFamilia {
+    const db = ensureDb();
+    const nueva: PreguntaFamilia = {
+      ...input,
+      id: randomUUID(),
+      estado: "pendiente",
+      created_at: new Date().toISOString(),
+      respondida_at: null,
+    };
+    db.preguntas_familia.push(nueva);
+    save(db);
+    return nueva;
+  },
+  listPreguntasFamilia(abueloId: string): PreguntaFamilia[] {
+    return ensureDb()
+      .preguntas_familia.filter((p) => p.abuelo_id === abueloId)
+      .sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+  },
+  getPreguntaFamilia(id: string): PreguntaFamilia | undefined {
+    return ensureDb().preguntas_familia.find((p) => p.id === id);
+  },
+  marcarPreguntaFamiliaRespondida(id: string): PreguntaFamilia | undefined {
+    const db = ensureDb();
+    const idx = db.preguntas_familia.findIndex((p) => p.id === id);
+    if (idx === -1) return undefined;
+    db.preguntas_familia[idx] = {
+      ...db.preguntas_familia[idx],
+      estado: "respondida",
+      respondida_at: new Date().toISOString(),
+    };
+    save(db);
+    return db.preguntas_familia[idx];
+  },
+  deletePreguntaFamilia(id: string): boolean {
+    const db = ensureDb();
+    const before = db.preguntas_familia.length;
+    db.preguntas_familia = db.preguntas_familia.filter((p) => p.id !== id);
+    save(db);
+    return db.preguntas_familia.length < before;
   },
 };

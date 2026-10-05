@@ -1,4 +1,5 @@
-import { listMemorias } from "@/lib/db";
+import { listFotos, listMemorias } from "@/lib/db";
+import { formatoDesdeRuta, leerArchivoFoto, type FormatoFoto } from "@/lib/storage/fotos";
 import type { Memoria } from "@/lib/types";
 import type Anthropic from "@anthropic-ai/sdk";
 
@@ -17,10 +18,49 @@ export interface CapituloLibro {
   historias: { fecha: string; texto: string; personas: string[] }[];
 }
 
+export interface FotoLibro {
+  data: Buffer;
+  formato: FormatoFoto;
+  descripcion: string | null;
+  subidaPor: string | null;
+  fecha: string;
+}
+
 export interface LibroLegado {
   nombreAbuelo: string;
   capitulos: CapituloLibro[];
   totalHistorias: number;
+  fotos: FotoLibro[];
+}
+
+// Techo de fotos que entran en un mismo PDF: cada una pesa unos cientos de KB
+// y react-pdf arma todo en memoria dentro de la función del servidor.
+const MAX_FOTOS_EN_LIBRO = 40;
+
+async function cargarFotosDelLibro(abueloId: string): Promise<FotoLibro[]> {
+  // Las fotos nunca deben impedir bajar el libro de historias: si la consulta
+  // falla (p. ej. la tabla todavía no existe en esa base), sale sin álbum.
+  const fotos = await listFotos(abueloId)
+    .then((todas) => todas.slice(-MAX_FOTOS_EN_LIBRO))
+    .catch((err) => {
+      console.error("[legado] no se pudieron leer las fotos:", err);
+      return [];
+    });
+  const cargadas = await Promise.all(
+    fotos.map(async (f): Promise<FotoLibro | null> => {
+      const data = await leerArchivoFoto(f.storage_path);
+      if (!data) return null;
+      return {
+        data,
+        formato: formatoDesdeRuta(f.storage_path),
+        descripcion: f.descripcion ?? null,
+        subidaPor: f.subida_por_nombre ?? null,
+        fecha: f.created_at,
+      };
+    })
+  );
+  // Si algún archivo no se pudo leer, el libro sale igual, sin esa foto.
+  return cargadas.filter((f): f is FotoLibro => f !== null);
 }
 
 function capitalizar(s: string): string {
@@ -107,7 +147,7 @@ export async function armarLibroLegado(
   abueloId: string,
   nombreAbuelo: string
 ): Promise<LibroLegado> {
-  const memorias = await listMemorias(abueloId);
+  const [memorias, fotos] = await Promise.all([listMemorias(abueloId), cargarFotosDelLibro(abueloId)]);
   const grupos = agruparPorTema(memorias);
   const introducciones = await generarIntroducciones(nombreAbuelo, grupos);
 
@@ -124,5 +164,5 @@ export async function armarLibroLegado(
   // Capítulos más nutridos primero — el índice se siente más generoso al abrir el libro.
   capitulos.sort((a, b) => b.historias.length - a.historias.length);
 
-  return { nombreAbuelo, capitulos, totalHistorias: memorias.length };
+  return { nombreAbuelo, capitulos, totalHistorias: memorias.length, fotos };
 }

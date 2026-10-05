@@ -3,6 +3,44 @@
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
 
+## Sesión 15 — Fotos para el libro de Legado Vivo + preguntas de la familia
+
+Dos funciones nuevas, pedidas por el usuario:
+
+**1. Fotos en el libro.** La persona mayor (desde `/abuelo`, "Tus fotos") y la
+familia (desde `/familia`, "Fotos de ...") pueden subir fotos con un pie
+opcional; aparecen en un "Álbum de fotos" del PDF, de a dos por página, con
+quién la subió y la fecha.
+- Archivos en un bucket privado `fotos-legado` de Supabase Storage (sin
+  Supabase, a disco en `/data/fotos`); metadata en la tabla `fotos`.
+  Abstracción en `src/lib/storage/fotos.ts`.
+- El navegador reduce la foto a un JPG de máx. 1600 px antes de subir (cabe
+  en el límite de ~4,5 MB de Vercel y evita que un HEIC de iPhone rompa el
+  PDF). El servidor valida el formato por los bytes, no por el nombre, y pone
+  tope de 4 MB y 100 fotos por persona.
+- La familia puede borrar cualquier foto; la persona mayor, solo las que subió
+  ella. El libro incluye hasta las 40 más recientes, y si la lectura de fotos
+  falla el libro de historias sale igual.
+
+**2. Preguntas de la familia.** El familiar deja preguntas ("Preguntas para
+...", en `/familia`). A la persona mayor le aparecen de a una en una tarjeta
+("Diego quiere saber"), con botón para escucharla en voz alta y responder por
+voz o texto. La respuesta pasa por el chat, así queda guardada como memoria, y
+la pregunta se marca respondida. Además Griyo recibe las pendientes (máx. 3) en
+su prompt y puede traer una a la charla con naturalidad; cuando se responde
+llama a la herramienta nueva `marcar_pregunta_familia_respondida`.
+
+**Migración obligatoria en Supabase**: correr el bloque "Fotos y preguntas de
+la familia" al final de `supabase/schema.sql` (tablas `fotos` y
+`preguntas_familia`, políticas y bucket). Sin eso las pantallas nuevas quedan
+vacías y subir fotos falla.
+
+Verificado en modo local (API con curl, UI en el navegador, PDF renderizado) y
+con Claude real (guardó la memoria y marcó la pregunta). Migración corrida en
+Supabase y probada de punta a punta contra la base y el Storage reales con una
+cuenta de prueba temporal (ya borrada): 20 chequeos de permisos, URLs firmadas,
+preguntas, borrado y generación del PDF con fotos.
+
 ## Sesión 14 — Bug de "Griyo deja de responder bien" en charlas largas + notificaciones push reales para los recordatorios
 
 El usuario reportó que a veces, después de una conversación extensa, Griyo
