@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
-import { HeartIcon } from "@/components/icons";
+import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
 
 export default function OnboardingAbuelo({ onListo }: { onListo: () => void }) {
   const [nombre, setNombre] = useState("");
@@ -36,9 +36,7 @@ export default function OnboardingAbuelo({ onListo }: { onListo: () => void }) {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 gap-6 bg-sand-200">
-      <div className="w-16 h-16 rounded-3xl bg-white shadow-warm-sm flex items-center justify-center">
-        <HeartIcon className="w-8 h-8 text-clay-500" />
-      </div>
+      <GriyoMascota estado="idle" className="w-24 h-24 -mb-3 opacity-0 animate-fade-rise" />
       <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-warm-sm">
         <h1 className="font-heading text-2xl font-semibold text-sand-900 mb-1">
           Creemos su perfil

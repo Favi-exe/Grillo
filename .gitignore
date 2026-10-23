@@ -26,3 +26,6 @@ npm-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 mensaje-whatsapp-equipo.txt
+/data/respaldo-supabase-*/
+/data/migracion/
+/.env.local.*

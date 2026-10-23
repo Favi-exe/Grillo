@@ -14,6 +14,8 @@ import type {
   PushSubscriptionRow,
   Foto,
   PreguntaFamilia,
+  PreferenciaCharla,
+  Consentimiento,
 } from "@/lib/types";
 
 /**
@@ -241,4 +243,56 @@ export async function deletePreguntaFamilia(id: string): Promise<boolean> {
   return usandoSupabase()
     ? supabaseStore.deletePreguntaFamilia(id)
     : localStore.deletePreguntaFamilia(id);
+}
+
+export async function listConversacionesFechas(
+  abueloId: string,
+  desde: string
+): Promise<{ id: string; fecha: string }[]> {
+  return usandoSupabase()
+    ? supabaseStore.listConversacionesFechas(abueloId, desde)
+    : localStore.listConversacionesFechas(abueloId, desde);
+}
+export async function getConversacionesPorIds(ids: string[]): Promise<Conversacion[]> {
+  return usandoSupabase()
+    ? supabaseStore.getConversacionesPorIds(ids)
+    : localStore.getConversacionesPorIds(ids);
+}
+
+export async function getPreferenciaCharla(abueloId: string): Promise<PreferenciaCharla | undefined> {
+  return usandoSupabase()
+    ? supabaseStore.getPreferenciaCharla(abueloId)
+    : localStore.getPreferenciaCharla(abueloId);
+}
+export async function listPreferenciasCharla(): Promise<PreferenciaCharla[]> {
+  return usandoSupabase() ? supabaseStore.listPreferenciasCharla() : localStore.listPreferenciasCharla();
+}
+export async function guardarPreferenciaCharla(
+  abueloId: string,
+  patch: Partial<Pick<PreferenciaCharla, "hora" | "activo" | "ultimo_aviso" | "ultimo_aviso_familia">>
+): Promise<PreferenciaCharla> {
+  return usandoSupabase()
+    ? supabaseStore.guardarPreferenciaCharla(abueloId, patch)
+    : localStore.guardarPreferenciaCharla(abueloId, patch);
+}
+
+export async function getConsentimiento(
+  authUserId: string,
+  version: string
+): Promise<Consentimiento | undefined> {
+  return usandoSupabase()
+    ? supabaseStore.getConsentimiento(authUserId, version)
+    : localStore.getConsentimiento(authUserId, version);
+}
+export async function registrarConsentimiento(
+  authUserId: string,
+  version: string
+): Promise<Consentimiento> {
+  return usandoSupabase()
+    ? supabaseStore.registrarConsentimiento(authUserId, version)
+    : localStore.registrarConsentimiento(authUserId, version);
+}
+
+export async function eliminarAbuelo(abueloId: string): Promise<boolean> {
+  return usandoSupabase() ? supabaseStore.eliminarAbuelo(abueloId) : localStore.eliminarAbuelo(abueloId);
 }

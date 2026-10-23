@@ -3,6 +3,102 @@
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
 
+## Sesión 18 — App más viva (pedido de Ceci)
+
+Dibujos propios y movimiento para llamar la atención de las personas mayores
+(`src/components/ilustraciones/`, animaciones nuevas en `tailwind.config.ts`;
+todo respeta `prefers-reduced-motion`):
+- **Abuelita, abuelito y Griyo (mascota)** en SVG. La mascota reacciona a la charla:
+  reposo (salta), escuchando (antenas), pensando (se inclina), hablando (boca).
+- **Portada**: escena con la pareja saludando bajo un sol de atardecer; el botón respira.
+- **/abuelo**: encabezado con la pareja saludando y mano que saluda; tarjetas de
+  pregunta con Griyo y brillo; ánimo del día con rebote y corazones al contestar;
+  recordatorios con abuelita y campana que suena.
+- **Charla por voz**: Griyo se asoma sobre el escenario (con estrellas y nubes
+  animadas), botón más grande con ondas al escuchar, anillo al pensar, barras al hablar,
+  cartel "¡Toca aquí!" antes de la primera charla, burbujas que entran desde los lados
+  y Griyo junto a sus respuestas.
+- **Registro de la persona mayor**: mascota que habla mientras narra y pareja en la bienvenida.
+- **Login, registro, recuperar, invitación y onboarding**: la mascota reemplaza al logo fijo.
+
+## Sesión 17 — Plan de inclusión: piezas 1 a 5 (aviso diario, privacidad, seguimiento, informe, señales)
+
+Pedido a raíz de lo que dijo Matías (Corfo): app que conversa, deja registro,
+emite informes y se cobra. Quedaron para después: el cobro de membresías y los
+recordatorios por WhatsApp.
+
+- **Aviso diario** (`src/lib/avisoDiario.ts`, `avisoFamilia.ts`): lo dispara el
+  mismo cron de `/api/push/enviar-pendientes`. Cada familia elige la hora
+  (`PreferenciaCharla.tsx`, `/api/preferencias-charla`, tabla
+  `preferencias_charla`, por defecto 11:00). Avisa si la hora pasó hace menos de
+  10 min (tolera un cron cada 5 min), no avisa si ya conversó ese día, usa
+  una pregunta pendiente de la familia si la hay, y reserva el aviso antes de
+  mandarlo (sin la tabla no envía: así nunca se repite). El correo a la
+  familia por días sin charla está APAGADO salvo `AVISOS_FAMILIA_ACTIVOS=true`.
+- **Privacidad y consentimiento**: `/privacidad`, `/terminos` (textos en esas
+  páginas; la versión vigente está en `src/lib/legal.ts`, subirla obliga a
+  aceptar de nuevo), casilla en los registros, `ConsentimientoGate` que bloquea
+  hasta aceptar (tabla `consentimientos`; si la tabla no existe no bloquea),
+  `/api/mis-datos` (GET descarga todo sin el texto de las charlas; DELETE borra
+  a la persona mayor, fotos, vectores y cuentas, pidiendo escribir el nombre).
+  Falta la revisión de un abogado y definir `NEXT_PUBLIC_CONTACTO_EMAIL`
+  (por defecto `contacto@griyo.cl`).
+- **Seguimiento** (`src/lib/seguimiento.ts`, `/api/seguimiento`,
+  `SeguimientoFamilia.tsx`): actividad, ánimo, temas y avisos de 7/30/60 días
+  en la vista familiar. Solo conteos y resúmenes, nunca el texto de las charlas.
+- **Informe** (`/api/informe`, `src/lib/pdf/InformeSeguimiento.tsx`): PDF de una
+  página, con el aviso de que es orientativo. No hay envío mensual por correo.
+- **Señales** (`src/lib/senales.ts`, probadas con datos de ejemplo): aislamiento
+  (días sin charlar, frecuencia, menciones de tristeza) y cambios de memoria
+  contra el propio patrón (frases de olvido, repeticiones, historias
+  contadas de nuevo; piden ~3 semanas de historia). Los umbrales NO están
+  validados por un profesional clínico.
+- Para activarlo en producción: correr el bloque de `supabase/schema.sql`
+  "Aviso diario para conversar y consentimientos" (y el de suscripciones de la
+  sesión 16), y que el cron externo corra cada 1 a 5 minutos.
+- El aviso en el celular de la persona mayor necesita que active las
+  notificaciones: el banner de `/abuelo` pasó arriba de todo.
+
+## Sesión 16 — Panel de administración (/admin)
+
+Pantalla para supervisar Griyo, con cuatro pestañas (`src/components/admin/`):
+
+- **Resumen**: "Requiere atención" (emergencias activas, familias sin uso o que
+  dejaron de usarlo, cobros próximos, familias sin plan, servicios sin
+  configurar), KPIs con variación semanal, gráfico de mensajes (7/14/30 días,
+  con vista de tabla), embudo de activación, adopción por función, horas del
+  día con más uso, quiénes más usan y servicios conectados.
+- **Familias**: una tarjeta por persona mayor con su familia vinculada,
+  actividad, mini gráfico de 14 días y plan. Buscador, filtros y orden. Al
+  tocarla abre un panel lateral con familiares (correo, relación, último
+  ingreso), dispositivos, uso por función y suscripción editable.
+- **Usuarios**: todas las cuentas de acceso (familiares y personas mayores con
+  cuenta propia) con a quién están vinculadas, plan, último ingreso y las que
+  no terminaron de registrarse.
+- **Suscripciones**: ingreso mensual, estado y plan de cada familia, cobros de
+  las próximas dos semanas (y vencidos) y las familias sin plan.
+
+Detalles técnicos:
+- **Acceso**: solo cuentas cuyo email esté en `ADMIN_EMAILS` (separados por
+  coma), con email confirmado. Sin la variable el panel queda cerrado para
+  todos. Ver `requireAdmin` en `src/lib/auth/server.ts`.
+- **Datos**: `src/lib/admin/resumen.ts` (agregación con service_role),
+  `GET /api/admin/resumen`. Nunca trae el texto de charlas ni historias, solo
+  conteos y fechas. Cada fila de `conversaciones` es un turno de charla.
+- **Suscripciones**: tabla nueva `suscripciones` (bloque al final de
+  `supabase/schema.sql`, hay que correrlo en Supabase). Se gestionan a mano
+  desde el panel (`PUT /api/admin/suscripciones`); no hay cobro automático.
+  Los precios de `src/lib/admin/planes.ts` son sugeridos y editables. Mientras
+  la tabla no exista, el panel funciona y avisa que falta correr el SQL.
+- **Arreglo de paso 1**: `/api/chat` ahora espera (`await`) el guardado de la
+  conversación. Antes quedaba sin esperar y en Vercel se podía perder, lo que
+  subcontaba el uso y el tope diario de mensajes.
+- **Arreglo de paso 2**: el cliente de Supabase del servidor ahora hace sus
+  fetch con `cache: "no-store"`. Next.js cacheaba respuestas de la base y el
+  panel mostraba cuentas ya borradas.
+- **No se mide todavía**: tokens/costo de Claude y ElevenLabs (no se guardan
+  por mensaje).
+
 ## Sesión 15 — Fotos para el libro de Legado Vivo + preguntas de la familia
 
 Dos funciones nuevas, pedidas por el usuario:

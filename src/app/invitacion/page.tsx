@@ -8,8 +8,10 @@ import {
   obtenerMetadataUsuarioActual,
 } from "@/lib/auth/familiarSession";
 import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
-import { CricketMark } from "@/components/icons";
+
 import { PasswordInput } from "@/components/PasswordInput";
+import CasillaConsentimiento from "@/components/CasillaConsentimiento";
+import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
 
 export default function InvitacionPage() {
   const router = useRouter();
@@ -19,6 +21,7 @@ export default function InvitacionPage() {
   const [relacion, setRelacion] = useState("");
   const [password, setPassword] = useState("");
   const [confirmar, setConfirmar] = useState("");
+  const [acepto, setAcepto] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,6 +40,10 @@ export default function InvitacionPage() {
     e.preventDefault();
     setError(null);
     if (!nombre.trim()) return;
+    if (!acepto) {
+      setError("Para continuar hace falta aceptar los términos y la política de privacidad.");
+      return;
+    }
     if (password.length < 6) {
       setError("La contraseña tiene que tener al menos 6 caracteres.");
       return;
@@ -68,9 +75,7 @@ export default function InvitacionPage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 gap-6 bg-sand-200">
-      <div className="w-16 h-16 rounded-3xl bg-white shadow-warm-sm flex items-center justify-center">
-        <CricketMark className="w-8 h-8 text-ember-600" />
-      </div>
+      <GriyoMascota estado="idle" className="w-24 h-24 -mb-3 opacity-0 animate-fade-rise" />
 
       <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-warm-sm">
         {!listo ? (
@@ -112,6 +117,7 @@ export default function InvitacionPage() {
               value={confirmar}
               onChange={setConfirmar}
             />
+            <CasillaConsentimiento checked={acepto} onChange={setAcepto} />
             {error && <p className="text-clay-600">{error}</p>}
             <button
               type="submit"

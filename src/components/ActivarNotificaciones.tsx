@@ -26,11 +26,11 @@ export default function ActivarNotificaciones() {
         <BellIcon className="w-5 h-5" />
       </span>
       <div className="flex-1">
-        <p className="font-semibold text-sand-900">Activa los avisos de recordatorios</p>
+        <p className="font-semibold text-sand-900">Activa los avisos de Griyo</p>
         <p className="text-sand-700 text-sm">
           {estado === "denegado"
             ? "Este dispositivo bloqueó las notificaciones — para activarlas hay que habilitarlas en la configuración del navegador."
-            : "Así te va a avisar aunque no tengas la pantalla abierta."}
+            : "Así te recuerda tus medicamentos y te invita a conversar cada día, aunque no tengas la pantalla abierta."}
         </p>
       </div>
       {estado !== "denegado" && (

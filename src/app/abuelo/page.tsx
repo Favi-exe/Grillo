@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { fetchAbuelo } from "@/lib/auth/fetchConAuth";
 import { borrarTokenDispositivo } from "@/lib/auth/deviceToken";
 import { cerrarSesionFamiliar } from "@/lib/auth/familiarSession";
 import VoiceChat from "@/components/VoiceChat";
 import RecordatoriosPanel from "@/components/RecordatoriosPanel";
 import ActivarNotificaciones from "@/components/ActivarNotificaciones";
+import ConsentimientoGate from "@/components/ConsentimientoGate";
 import BotonEmergencia from "@/components/BotonEmergencia";
 import RegistroAnimoAbuelo from "@/components/RegistroAnimoAbuelo";
 import PreguntaSemana from "@/components/PreguntaSemana";
@@ -15,6 +17,7 @@ import PreguntaDeLaFamilia from "@/components/PreguntaDeLaFamilia";
 import FotosLegado from "@/components/FotosLegado";
 import InvitarFamiliar from "@/components/InvitarFamiliar";
 import { CricketMark } from "@/components/icons";
+import { ParejaSaludando } from "@/components/ilustraciones/Escenas";
 import type { Abuelo } from "@/lib/types";
 
 function fechaLegible(): string {
@@ -83,23 +86,32 @@ export default function AbueloPage() {
 
   return (
     <main className="min-h-screen bg-sand-200 px-4 py-8">
-      <div className="max-w-2xl mx-auto flex items-start justify-between gap-3 mb-6 opacity-0 animate-fade-rise">
-        <div className="min-w-0">
+      <ConsentimientoGate />
+      <div className="max-w-2xl mx-auto flex items-end justify-between gap-3 mb-6 opacity-0 animate-fade-rise">
+        <div className="min-w-0 pb-1">
           <h1 className="font-heading text-3xl font-semibold text-sand-900">
-            Hola, {abuelo?.nombre} 👋
+            Hola, {abuelo?.nombre}{" "}
+            <span className="inline-block animate-wave-hand" style={{ transformOrigin: "70% 80%" }} aria-hidden="true">
+              👋
+            </span>
           </h1>
           <p className="text-sand-700 text-lg">{fechaLegible()}</p>
+          <button
+            onClick={async () => {
+              borrarTokenDispositivo();
+              await cerrarSesionFamiliar();
+              router.push("/login");
+            }}
+            className="whitespace-nowrap text-sand-600 text-sm underline mt-2"
+          >
+            No soy yo
+          </button>
         </div>
-        <button
-          onClick={async () => {
-            borrarTokenDispositivo();
-            await cerrarSesionFamiliar();
-            router.push("/login");
-          }}
-          className="shrink-0 whitespace-nowrap text-sand-500 text-sm underline pt-2"
-        >
-          No soy yo
-        </button>
+        <ParejaSaludando className="w-40 sm:w-52 shrink-0 -mb-2" />
+      </div>
+
+      <div className="opacity-0 animate-fade-rise stagger-1 mb-4">
+        <ActivarNotificaciones />
       </div>
 
       <div className="opacity-0 animate-fade-rise stagger-1">
@@ -123,7 +135,6 @@ export default function AbueloPage() {
       </div>
       <div className="opacity-0 animate-fade-rise stagger-3">
         <RecordatoriosPanel />
-        <ActivarNotificaciones />
       </div>
       <div className="mt-6 opacity-0 animate-fade-rise stagger-3">
         <FotosLegado modo="abuelo" />
@@ -131,6 +142,10 @@ export default function AbueloPage() {
       <div className="max-w-2xl mx-auto mt-6 opacity-0 animate-fade-rise stagger-3">
         <InvitarFamiliar />
       </div>
+      <p className="max-w-2xl mx-auto mt-8 text-center text-sm text-sand-700">
+        <Link href="/privacidad" className="underline">Privacidad</Link> ·{" "}
+        <Link href="/terminos" className="underline">Términos de uso</Link>
+      </p>
     </main>
   );
 }

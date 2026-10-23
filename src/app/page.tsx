@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CricketMark } from "@/components/icons";
+import { EscenaPortada } from "@/components/ilustraciones/Escenas";
 
 export default function LandingPage() {
   return (
@@ -15,12 +15,7 @@ export default function LandingPage() {
       />
 
       <div className="relative flex flex-col items-center">
-        <div
-          className="w-24 h-24 rounded-4xl bg-white shadow-warm-lg flex items-center justify-center mb-6 opacity-0 animate-fade-rise"
-          style={{ animationDelay: "0ms" }}
-        >
-          <CricketMark className="w-12 h-12 text-ember-600" />
-        </div>
+        <EscenaPortada className="w-full max-w-md mb-1 opacity-0 animate-fade-rise" />
 
         <h1
           className="font-heading text-5xl font-semibold text-dusk-800 mb-3 opacity-0 animate-fade-rise stagger-1"
@@ -36,12 +31,18 @@ export default function LandingPage() {
           atesorar.
         </p>
 
+        <div className="animate-breathe">
         <Link
           href="/login"
-          className="opacity-0 animate-fade-rise stagger-3 inline-flex items-center justify-center min-h-[56px] bg-ember-600 hover:bg-ember-700 active:scale-[0.98] text-white text-xl font-semibold px-10 py-4 rounded-full shadow-warm transition-[background-color,transform] focus:outline-none focus-visible:ring-4 focus-visible:ring-ember-300"
+          className="opacity-0 animate-fade-rise stagger-3 inline-flex items-center justify-center min-h-[60px] bg-ember-600 hover:bg-ember-700 active:scale-[0.98] text-white text-xl font-semibold px-10 py-4 rounded-full shadow-warm transition-[background-color,transform] focus:outline-none focus-visible:ring-4 focus-visible:ring-ember-300"
         >
           Ingresar
         </Link>
+        </div>
+        <p className="mt-8 text-sm text-sand-700 opacity-0 animate-fade-rise stagger-4">
+          <Link href="/privacidad" className="underline">Privacidad</Link> ·{" "}
+          <Link href="/terminos" className="underline">Términos de uso</Link>
+        </p>
       </div>
     </main>
   );

@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { iniciarSesionFamiliar, isSupabaseAuthConfigured, haySesionActiva } from "@/lib/auth/familiarSession";
 import { obtenerTokenDispositivo } from "@/lib/auth/deviceToken";
 import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
-import { CricketMark } from "@/components/icons";
+
 import { PasswordInput } from "@/components/PasswordInput";
+import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,9 +57,7 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 gap-6 bg-sand-200">
-      <div className="w-16 h-16 rounded-3xl bg-white shadow-warm-sm flex items-center justify-center mb-2 opacity-0 animate-fade-rise">
-        <CricketMark className="w-8 h-8 text-ember-600" />
-      </div>
+      <GriyoMascota estado="idle" className="w-24 h-24 -mb-3 opacity-0 animate-fade-rise" />
 
       <div className="opacity-0 animate-fade-rise stagger-1 flex gap-2 bg-white rounded-full p-1 shadow-warm-sm">
         <button

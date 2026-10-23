@@ -6,23 +6,60 @@ import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { fetchAbuelo } from "@/lib/auth/fetchConAuth";
 import type { ChatMessage } from "@/lib/types";
 import { MicIcon, SendIcon } from "@/components/icons";
+import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
+import { ParejaSaludando } from "@/components/ilustraciones/Escenas";
 
 type Estado = "idle" | "escuchando" | "pensando" | "hablando";
 
 const MessageBubble = memo(function MessageBubble({ m }: { m: ChatMessage }) {
   const esUsuario = m.role === "user";
+  if (esUsuario) {
+    return (
+      <div className="max-w-[85%] self-end px-5 py-3.5 rounded-3xl rounded-br-lg bg-ember-600 text-white text-lg leading-relaxed shadow-warm-sm animate-slide-right">
+        {m.content}
+      </div>
+    );
+  }
   return (
-    <div
-      className={`max-w-[85%] px-5 py-3.5 rounded-3xl text-lg leading-relaxed shadow-warm-sm animate-pop-in ${
-        esUsuario
-          ? "self-end bg-ember-600 text-white rounded-br-lg"
-          : "self-start bg-white text-sand-900 rounded-bl-lg"
-      }`}
-    >
-      {m.content}
+    <div className="flex items-end gap-2 self-start max-w-[92%] animate-slide-left">
+      <GriyoMascota estado="quieto" className="w-10 h-10 shrink-0 -mb-1" />
+      <div className="px-5 py-3.5 rounded-3xl rounded-bl-lg bg-white text-sand-900 text-lg leading-relaxed shadow-warm-sm">
+        {m.content}
+      </div>
     </div>
   );
 });
+
+// Estrellitas y nubes que decoran el escenario de atardecer. Puro adorno: no
+// reciben clics ni los lee un lector de pantalla.
+const ESTRELLAS = [
+  { x: "8%", y: "9%", t: 10, d: "0s" },
+  { x: "24%", y: "4%", t: 7, d: "0.8s" },
+  { x: "42%", y: "11%", t: 8, d: "1.6s" },
+  { x: "63%", y: "5%", t: 11, d: "0.4s" },
+  { x: "82%", y: "10%", t: 8, d: "1.2s" },
+  { x: "93%", y: "22%", t: 6, d: "2.1s" },
+  { x: "4%", y: "30%", t: 6, d: "1.9s" },
+];
+
+function DecoracionEscenario() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-5xl">
+      <div className="absolute -top-2 left-[6%] w-24 h-7 rounded-full bg-white/25 blur-[2px] animate-drift" />
+      <div className="absolute top-8 right-[8%] w-20 h-6 rounded-full bg-white/20 blur-[2px] animate-drift" style={{ animationDelay: "-6s" }} />
+      {ESTRELLAS.map((e, i) => (
+        <svg
+          key={i}
+          viewBox="0 0 24 24"
+          className="absolute text-gold-400 animate-twinkle"
+          style={{ left: e.x, top: e.y, width: e.t, height: e.t, animationDelay: e.d }}
+        >
+          <path fill="currentColor" d="M12 0l2.6 9.4L24 12l-9.4 2.6L12 24l-2.6-9.4L0 12l9.4-2.6z" />
+        </svg>
+      ))}
+    </div>
+  );
+}
 
 function ThinkingDots() {
   return (
@@ -184,16 +221,24 @@ export default function VoiceChat() {
       : "Toca para hablar";
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto mt-16">
       {/* Escenario de atardecer — el momento especial de la app. Todo lo demás
           en el resto de la interfaz vive en tonos arena; este gradiente
-          aparece solo aquí para señalar "este es el corazón de Griyo". */}
-      <div className="relative rounded-5xl bg-dusk p-5 sm:p-7 shadow-warm-lg">
-        <div className="w-full bg-sand-50/95 backdrop-blur-sm rounded-4xl shadow-inner p-4 mb-6 min-h-[180px] max-h-[50vh] overflow-y-auto flex flex-col gap-3">
+          aparece solo aquí para señalar "este es el corazón de Griyo". Griyo
+          se asoma por arriba y reacciona a lo que pasa en la charla. */}
+      <div className="relative rounded-5xl bg-dusk p-5 sm:p-7 pt-14 shadow-warm-lg">
+        <DecoracionEscenario />
+        <GriyoMascota
+          estado={estado}
+          className="absolute left-1/2 -translate-x-1/2 -top-[4.5rem] w-32 h-32 z-10 drop-shadow-[0_8px_10px_rgba(74,59,92,0.35)]"
+        />
+        <div className="relative w-full bg-sand-50/95 backdrop-blur-sm rounded-4xl shadow-inner p-4 mb-6 min-h-[180px] max-h-[50vh] overflow-y-auto flex flex-col gap-3">
           {historia.length === 0 && (
-            <p className="text-center text-sand-700 py-8 text-lg">
-              Toca el botón y empieza a hablar con Griyo.
-            </p>
+            <div className="flex flex-col items-center text-center py-2">
+              <ParejaSaludando className="w-48 h-auto" />
+              <p className="text-sand-800 text-xl font-semibold mt-1">¡Hola! Soy Griyo.</p>
+              <p className="text-sand-700 text-lg">Toca el botón y cuéntame cómo va tu día.</p>
+            </div>
           )}
           {historia.map((m, i) => (
             <MessageBubble key={i} m={m} />
@@ -214,38 +259,58 @@ export default function VoiceChat() {
             </p>
           )}
 
-          <button
-            onClick={handleMicClick}
-            disabled={estado === "pensando" || estado === "hablando"}
-            aria-label={textoBoton}
-            className={`relative w-32 h-32 rounded-full flex items-center justify-center shadow-warm-lg ring-4 ring-white/80 transition-[background-color,transform] disabled:cursor-not-allowed active:scale-[0.97] ${
-              escuchando ? "bg-clay-500" : "bg-ember-600 hover:bg-ember-700"
-            } ${estado === "pensando" || estado === "hablando" ? "opacity-80" : ""}`}
-          >
-            {/* Chirrido: el ritmo de pulso de un grillo real (dos latidos cortos + pausa),
-                la firma de movimiento de Griyo — activo mientras escucha. */}
-            {escuchando && (
-              <span className="absolute inset-0 rounded-full bg-clay-400 animate-chirp-active" />
-            )}
-            {estado === "idle" && (
-              <span className="absolute inset-0 rounded-full bg-ember-400 animate-chirp-idle" />
-            )}
-            {estado === "hablando" && (
-              <span className="relative z-10 flex items-end gap-1 h-10">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <span
-                    key={i}
-                    className={`w-2 rounded-full bg-white origin-bottom animate-wave stagger-${(i % 4) + 1}`}
-                    style={{ height: "100%" }}
-                  />
-                ))}
-              </span>
-            )}
-            {estado !== "hablando" && (
-              <MicIcon className="relative z-10 w-12 h-12 text-white" />
-            )}
-          </button>
-          <p className="mt-4 text-xl font-semibold text-white drop-shadow-sm">{textoBoton}</p>
+          {estado === "idle" && historia.length === 0 && (
+            <div className="mb-2 flex flex-col items-center text-white animate-nudge-down" aria-hidden="true">
+              <span className="bg-white/90 text-dusk-800 font-semibold rounded-full px-4 py-1.5 text-lg shadow-warm-sm">¡Toca aquí!</span>
+              <svg viewBox="0 0 24 24" className="w-7 h-7 -mt-0.5" fill="currentColor"><path d="M12 20l-8-9h16z" /></svg>
+            </div>
+          )}
+
+          <div className={estado === "idle" ? "animate-breathe" : undefined}>
+            <button
+              onClick={handleMicClick}
+              disabled={estado === "pensando" || estado === "hablando"}
+              aria-label={textoBoton}
+              className={`relative w-36 h-36 rounded-full flex items-center justify-center shadow-warm-lg ring-4 ring-white/80 transition-[background-color,transform] disabled:cursor-not-allowed active:scale-[0.95] ${
+                escuchando
+                  ? "bg-gradient-to-b from-clay-400 to-clay-600"
+                  : "bg-gradient-to-b from-ember-400 to-ember-600 hover:from-ember-500 hover:to-ember-700"
+              } ${estado === "pensando" || estado === "hablando" ? "opacity-85" : ""}`}
+            >
+              {/* Ondas de sonido hacia afuera mientras escucha: se nota a simple vista que Griyo está oyendo. */}
+              {escuchando && (
+                <>
+                  <span className="absolute inset-0 rounded-full bg-clay-400/70 animate-ripple" />
+                  <span className="absolute inset-0 rounded-full bg-clay-400/60 animate-ripple" style={{ animationDelay: "0.7s" }} />
+                  <span className="absolute inset-0 rounded-full bg-clay-400/50 animate-ripple" style={{ animationDelay: "1.4s" }} />
+                </>
+              )}
+              {/* En reposo: dos latidos cortos y pausa, como el chirrido de un grillo. */}
+              {estado === "idle" && (
+                <span className="absolute inset-0 rounded-full bg-ember-400 animate-chirp-idle" />
+              )}
+              {estado === "pensando" && (
+                <span className="absolute -inset-2 rounded-full border-4 border-dashed border-white/70 animate-spin" style={{ animationDuration: "5s" }} />
+              )}
+              {estado === "hablando" && (
+                <span className="relative z-10 flex items-end gap-1.5 h-12">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <span
+                      key={i}
+                      className={`w-2.5 rounded-full bg-white origin-bottom animate-wave stagger-${(i % 4) + 1}`}
+                      style={{ height: "100%" }}
+                    />
+                  ))}
+                </span>
+              )}
+              {estado !== "hablando" && (
+                <MicIcon className="relative z-10 w-14 h-14 text-white" />
+              )}
+            </button>
+          </div>
+          <p key={textoBoton} className="mt-4 text-2xl font-semibold text-white drop-shadow-sm animate-pop-in">
+            {textoBoton}
+          </p>
         </div>
       </div>
 

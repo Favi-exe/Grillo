@@ -157,3 +157,43 @@ export async function requireAbueloAccess(req: NextRequest): Promise<{ abueloId:
 
   throw new AuthError("Este dispositivo no está vinculado a ninguna persona mayor.");
 }
+
+function emailsAdmin(): string[] {
+  return (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/**
+ * Acceso al panel /admin. Exige una sesión real de Supabase cuyo email esté
+ * confirmado y figure en ADMIN_EMAILS. Sin esa variable el panel queda
+ * cerrado para todos (falla cerrado, nunca abierto).
+ */
+export async function requireAdmin(
+  req: NextRequest
+): Promise<{ authUserId: string; email: string }> {
+  if (!isSupabaseConfigured()) {
+    throw new AuthError("El panel de administración necesita Supabase conectado.", 503);
+  }
+  const permitidos = emailsAdmin();
+  if (permitidos.length === 0) {
+    throw new AuthError(
+      "El panel de administración no está habilitado en este servidor (falta ADMIN_EMAILS).",
+      403
+    );
+  }
+
+  const authHeader = req.headers.get("authorization") ?? "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
+  if (!token) throw new AuthError("Falta iniciar sesión.");
+
+  const { data, error } = await getSupabaseClient().auth.getUser(token);
+  if (error || !data.user) throw new AuthError("Sesión inválida o vencida.");
+
+  const email = data.user.email?.toLowerCase();
+  if (!email || !data.user.email_confirmed_at || !permitidos.includes(email)) {
+    throw new AuthError("No tienes acceso a este panel.", 403);
+  }
+  return { authUserId: data.user.id, email };
+}

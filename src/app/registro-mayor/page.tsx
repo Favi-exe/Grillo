@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { iniciarSesion, isSupabaseAuthConfigured } from "@/lib/auth/familiarSession";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
-import { CricketMark, CheckIcon } from "@/components/icons";
+import { CheckIcon } from "@/components/icons";
+import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
+import { ParejaSaludando } from "@/components/ilustraciones/Escenas";
+import CasillaConsentimiento from "@/components/CasillaConsentimiento";
 
 type Paso = "intro" | "nombre" | "email" | "confirmar" | "listo";
 
@@ -23,8 +26,10 @@ export default function RegistroMayorPage() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [acepto, setAcepto] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [passwordGenerada, setPasswordGenerada] = useState<string | null>(null);
+  const [narrando, setNarrando] = useState(false);
 
   const { disponible: ttsDisponible, hablar } = useSpeechSynthesis("es-419");
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -33,6 +38,9 @@ export default function RegistroMayorPage() {
   // pantalla usaba directo la síntesis nativa del navegador, que suena
   // robótica y es la primera voz que escucha la persona al crear su cuenta.
   async function narrar(texto: string) {
+    // La mascota mueve la boca mientras Griyo habla.
+    setNarrando(true);
+    const parar = setTimeout(() => setNarrando(false), Math.min(9000, 1500 + texto.length * 70));
     try {
       const res = await fetch("/api/tts", {
         method: "POST",
@@ -44,6 +52,10 @@ export default function RegistroMayorPage() {
         audioRef.current?.pause();
         const audio = new Audio(`data:${data.mimeType};base64,${data.audioBase64}`);
         audioRef.current = audio;
+        audio.onended = () => {
+          clearTimeout(parar);
+          setNarrando(false);
+        };
         await audio.play();
         return;
       }
@@ -89,13 +101,12 @@ export default function RegistroMayorPage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 gap-6 bg-dusk-soft">
-      <div className="w-20 h-20 rounded-4xl bg-white shadow-warm-lg flex items-center justify-center animate-pop-in">
-        <CricketMark className="w-10 h-10 text-ember-600" />
-      </div>
+      <GriyoMascota estado={narrando ? "hablando" : "idle"} className="w-32 h-32 -mb-4 animate-pop-in" />
 
       <div className="w-full max-w-md bg-white rounded-4xl p-7 shadow-warm-lg animate-pop-in">
         {paso === "intro" && (
           <div className="flex flex-col gap-5 text-center">
+            <ParejaSaludando className="w-56 mx-auto -mb-2" />
             <h1 className="font-heading text-3xl font-semibold text-sand-900">
               ¡Hola! Soy Griyo 🦗
             </h1>
@@ -177,8 +188,11 @@ export default function RegistroMayorPage() {
             <p className="text-xl text-sand-800 leading-relaxed">
               Voy a crear tu cuenta con el correo <span className="font-semibold">{email}</span>.
             </p>
+            <div className="text-left bg-sand-100 rounded-2xl p-4">
+              <CasillaConsentimiento checked={acepto} onChange={setAcepto} grande />
+            </div>
             {error && <p className="text-clay-600 text-lg">{error}</p>}
-            <button onClick={crearCuenta} disabled={cargando} className={botonCls}>
+            <button onClick={crearCuenta} disabled={cargando || !acepto} className={botonCls}>
               {cargando ? "Creando tu cuenta..." : "Crear mi cuenta"}
             </button>
             <button

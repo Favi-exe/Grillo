@@ -6,6 +6,7 @@ import {
   eliminarPushSubscriptionPorEndpoint,
 } from "@/lib/db";
 import { enviarNotificacionATodas, isPushConfigured } from "@/lib/push/webPush";
+import { ejecutarAvisosDiarios, type ResultadoAvisos } from "@/lib/avisoDiario";
 import type { TipoRecordatorio } from "@/lib/types";
 
 const ZONA_HORARIA = "America/Santiago";
@@ -118,11 +119,21 @@ export async function GET(req: NextRequest) {
     detalle.push({ recordatorioId: r.id, abueloId: r.abuelo_id, enviadas });
   }
 
+  // Aviso diario que invita a conversar. Un fallo acá nunca debe impedir que
+  // los recordatorios ya enviados queden registrados.
+  let avisosDiarios: ResultadoAvisos | null = null;
+  try {
+    avisosDiarios = await ejecutarAvisosDiarios();
+  } catch (err) {
+    console.error("[push] fallo en los avisos diarios:", err);
+  }
+
   return NextResponse.json({
     hora,
     revisados: todos.length,
     disparados: pendientes.length,
     totalEnviadas,
     detalle,
+    avisosDiarios,
   });
 }

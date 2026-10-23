@@ -5,6 +5,8 @@ import { fetchAbuelo } from "@/lib/auth/fetchConAuth";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { preguntaDeLaSemana } from "@/lib/preguntasSemana";
 import { HeartIcon, MicIcon, SendIcon, CheckIcon } from "@/components/icons";
+import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
+import CorazonesSubiendo from "@/components/ilustraciones/Corazones";
 
 function claveSemana(): string {
   const inicioAno = new Date(new Date().getFullYear(), 0, 1);
@@ -56,10 +58,9 @@ export default function PreguntaSemana() {
 
   if (respondida) {
     return (
-      <div className="w-full max-w-2xl mx-auto mb-6 bg-white rounded-3xl shadow-warm-sm p-5 flex items-start gap-4 animate-pop-in">
-        <span className="w-11 h-11 shrink-0 rounded-2xl bg-ember-100 text-ember-700 flex items-center justify-center">
-          <CheckIcon className="w-6 h-6" />
-        </span>
+      <div className="relative w-full max-w-2xl mx-auto mb-6 bg-white rounded-3xl shadow-warm-sm p-5 flex items-start gap-4 animate-pop-in">
+        <CorazonesSubiendo />
+        <GriyoMascota estado="feliz" className="w-14 h-14 shrink-0" />
         <div>
           <h2 className="font-heading text-lg font-semibold text-sand-900 mb-1">
             Ya respondiste la pregunta de esta semana
@@ -71,9 +72,9 @@ export default function PreguntaSemana() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-6 bg-white rounded-3xl shadow-warm-sm p-5">
+    <div className="w-full max-w-2xl mx-auto mb-6 bg-white rounded-3xl shadow-warm-sm p-5 ring-2 ring-ember-200 animate-breathe">
       <div className="flex items-center gap-2 mb-2">
-        <HeartIcon className="w-5 h-5 text-clay-500" />
+        <GriyoMascota estado="escuchando" className="w-14 h-14 -ml-1" />
         <h2 className="font-heading text-lg font-semibold text-sand-900">La pregunta de la semana</h2>
       </div>
       <p className="text-lg text-sand-800 mb-4">{pregunta}</p>

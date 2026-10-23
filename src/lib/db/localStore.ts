@@ -14,6 +14,8 @@ import type {
   PushSubscriptionRow,
   Foto,
   PreguntaFamilia,
+  PreferenciaCharla,
+  Consentimiento,
 } from "@/lib/types";
 
 interface DbShape {
@@ -29,6 +31,8 @@ interface DbShape {
   push_subscriptions: PushSubscriptionRow[];
   fotos: Foto[];
   preguntas_familia: PreguntaFamilia[];
+  preferencias_charla: PreferenciaCharla[];
+  consentimientos: Consentimiento[];
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -51,6 +55,8 @@ function vacio(): DbShape {
     push_subscriptions: [],
     fotos: [],
     preguntas_familia: [],
+    preferencias_charla: [],
+    consentimientos: [],
   };
 }
 
@@ -74,6 +80,8 @@ function ensureDb(): DbShape {
     if (!parsed.push_subscriptions) parsed.push_subscriptions = [];
     if (!parsed.fotos) parsed.fotos = [];
     if (!parsed.preguntas_familia) parsed.preguntas_familia = [];
+    if (!parsed.preferencias_charla) parsed.preferencias_charla = [];
+    if (!parsed.consentimientos) parsed.consentimientos = [];
     return parsed as DbShape;
   } catch {
     const initial = vacio();
@@ -412,5 +420,85 @@ export const localStore = {
     db.preguntas_familia = db.preguntas_familia.filter((p) => p.id !== id);
     save(db);
     return db.preguntas_familia.length < before;
+  },
+
+  // --- Seguimiento (solo fechas, sin el texto de las charlas) ---
+  listConversacionesFechas(abueloId: string, desde: string): { id: string; fecha: string }[] {
+    return ensureDb()
+      .conversaciones.filter((c) => c.abuelo_id === abueloId && c.fecha >= desde)
+      .map((c) => ({ id: c.id, fecha: c.fecha }))
+      .sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
+  },
+  getConversacionesPorIds(ids: string[]): Conversacion[] {
+    const set = new Set(ids);
+    return ensureDb().conversaciones.filter((c) => set.has(c.id));
+  },
+
+  // --- Aviso diario ---
+  getPreferenciaCharla(abueloId: string): PreferenciaCharla | undefined {
+    return ensureDb().preferencias_charla.find((p) => p.abuelo_id === abueloId);
+  },
+  listPreferenciasCharla(): PreferenciaCharla[] {
+    return ensureDb().preferencias_charla;
+  },
+  guardarPreferenciaCharla(
+    abueloId: string,
+    patch: Partial<Pick<PreferenciaCharla, "hora" | "activo" | "ultimo_aviso" | "ultimo_aviso_familia">>
+  ): PreferenciaCharla {
+    const db = ensureDb();
+    const idx = db.preferencias_charla.findIndex((p) => p.abuelo_id === abueloId);
+    const base: PreferenciaCharla =
+      idx === -1
+        ? { abuelo_id: abueloId, hora: "11:00", activo: true, updated_at: new Date().toISOString() }
+        : db.preferencias_charla[idx];
+    const nueva = { ...base, ...patch, updated_at: new Date().toISOString() };
+    if (idx === -1) db.preferencias_charla.push(nueva);
+    else db.preferencias_charla[idx] = nueva;
+    save(db);
+    return nueva;
+  },
+
+  // --- Consentimientos ---
+  getConsentimiento(authUserId: string, version: string): Consentimiento | undefined {
+    return ensureDb().consentimientos.find(
+      (c) => c.auth_user_id === authUserId && c.version === version
+    );
+  },
+  registrarConsentimiento(authUserId: string, version: string): Consentimiento {
+    const db = ensureDb();
+    const previo = db.consentimientos.find(
+      (c) => c.auth_user_id === authUserId && c.version === version
+    );
+    if (previo) return previo;
+    const nuevo: Consentimiento = {
+      id: randomUUID(),
+      auth_user_id: authUserId,
+      version,
+      aceptado_en: new Date().toISOString(),
+    };
+    db.consentimientos.push(nuevo);
+    save(db);
+    return nuevo;
+  },
+
+  // --- Borrado de una persona mayor y todo lo suyo ---
+  eliminarAbuelo(abueloId: string): boolean {
+    const db = ensureDb();
+    const antes = db.abuelos.length;
+    db.abuelos = db.abuelos.filter((a) => a.id !== abueloId);
+    db.usuarios = db.usuarios.filter((u) => u.abuelo_id !== abueloId);
+    db.recordatorios = db.recordatorios.filter((r) => r.abuelo_id !== abueloId);
+    db.memorias = db.memorias.filter((m) => m.abuelo_id !== abueloId);
+    db.conversaciones = db.conversaciones.filter((c) => c.abuelo_id !== abueloId);
+    db.alertas_emergencia = db.alertas_emergencia.filter((a) => a.abuelo_id !== abueloId);
+    db.alertas_animo = db.alertas_animo.filter((a) => a.abuelo_id !== abueloId);
+    db.registros_animo = db.registros_animo.filter((r) => r.abuelo_id !== abueloId);
+    db.abuelo_dispositivos = db.abuelo_dispositivos.filter((d) => d.abuelo_id !== abueloId);
+    db.push_subscriptions = db.push_subscriptions.filter((p) => p.abuelo_id !== abueloId);
+    db.fotos = db.fotos.filter((f) => f.abuelo_id !== abueloId);
+    db.preguntas_familia = db.preguntas_familia.filter((p) => p.abuelo_id !== abueloId);
+    db.preferencias_charla = db.preferencias_charla.filter((p) => p.abuelo_id !== abueloId);
+    save(db);
+    return db.abuelos.length < antes;
   },
 };

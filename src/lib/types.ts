@@ -137,3 +137,40 @@ export interface PushSubscriptionRow {
   auth: string;
   created_at: string;
 }
+
+// Plan de una familia, que el administrador registra a mano desde /admin (no
+// hay cobro automático todavía). Una por persona mayor.
+export type EstadoSuscripcion = "piloto" | "prueba" | "activa" | "pausada" | "cancelada";
+
+export interface Suscripcion {
+  id: string;
+  abuelo_id: string;
+  plan: string;
+  estado: EstadoSuscripcion;
+  precio_clp: number;
+  inicio?: string | null; // "YYYY-MM-DD"
+  proximo_cobro?: string | null; // "YYYY-MM-DD"
+  notas?: string | null;
+  updated_at: string;
+}
+
+// Aviso diario que invita a la persona mayor a conversar. Sin fila en la base
+// se usan los valores por defecto (ver PREFERENCIA_CHARLA_POR_DEFECTO).
+export interface PreferenciaCharla {
+  abuelo_id: string;
+  hora: string; // "HH:MM" hora de Chile
+  activo: boolean;
+  ultimo_aviso?: string | null;
+  ultimo_aviso_familia?: string | null;
+  updated_at: string;
+}
+
+export const HORA_CHARLA_POR_DEFECTO = "11:00";
+
+// Una cuenta que aceptó los términos y la política de privacidad.
+export interface Consentimiento {
+  id: string;
+  auth_user_id: string;
+  version: string;
+  aceptado_en: string;
+}

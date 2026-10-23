@@ -6,6 +6,8 @@ import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { HeartIcon, MicIcon, SendIcon, VolumeIcon } from "@/components/icons";
 import type { PreguntaFamilia } from "@/lib/types";
+import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
+import CorazonesSubiendo from "@/components/ilustraciones/Corazones";
 
 // Tarjeta de la pantalla de la persona mayor: le muestra, de a una, las
 // preguntas que su familia dejó armadas. Responde escribiendo o por voz; la
@@ -97,8 +99,12 @@ export default function PreguntaDeLaFamilia() {
 
   if (replica) {
     return (
-      <div className="w-full max-w-2xl mx-auto mb-6 bg-white rounded-3xl shadow-warm-sm p-5 animate-pop-in">
-        <p className="text-lg text-sand-900 mb-4">{replica}</p>
+      <div className="relative w-full max-w-2xl mx-auto mb-6 bg-white rounded-3xl shadow-warm-sm p-5 animate-pop-in">
+        <CorazonesSubiendo />
+        <div className="flex items-center gap-3 mb-4">
+          <GriyoMascota estado="feliz" className="w-14 h-14 shrink-0" />
+          <p className="text-lg text-sand-900">{replica}</p>
+        </div>
         <button
           onClick={siguiente}
           className="min-h-[52px] w-full bg-ember-600 hover:bg-ember-700 text-white rounded-2xl font-semibold transition-colors"
@@ -110,9 +116,9 @@ export default function PreguntaDeLaFamilia() {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto mb-6 bg-white rounded-3xl shadow-warm-sm p-5">
+    <div className="w-full max-w-2xl mx-auto mb-6 bg-white rounded-3xl shadow-warm-sm p-5 ring-2 ring-ember-200 animate-breathe">
       <div className="flex items-center gap-2 mb-2">
-        <HeartIcon className="w-5 h-5 text-clay-500" />
+        <GriyoMascota estado="escuchando" className="w-14 h-14 -ml-1" />
         <h2 className="font-heading text-lg font-semibold text-sand-900">
           {actual.autor_nombre} quiere saber
         </h2>

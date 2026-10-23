@@ -282,3 +282,59 @@ on conflict (id) do nothing;
 
 -- Sin seed de datos de ejemplo a propósito: los usuarios reales (abuelo +
 -- familiar) se crean desde la app a través del flujo de registro/onboarding.
+
+-- ----------------------------------------------------------------------
+-- Suscripciones (octubre 2026) — las gestiona a mano el administrador desde
+-- /admin. Por ahora no hay cobro automático: esta tabla solo registra qué
+-- plan tiene cada familia y en qué estado está. Una fila por persona mayor.
+-- Para un proyecto ya desplegado, correr solo este bloque en el SQL editor.
+-- ----------------------------------------------------------------------
+create table if not exists suscripciones (
+  id uuid primary key default uuid_generate_v4(),
+  abuelo_id uuid not null unique references abuelos(id) on delete cascade,
+  plan text not null default 'piloto',
+  estado text not null default 'piloto' check (estado in ('piloto', 'prueba', 'activa', 'pausada', 'cancelada')),
+  precio_clp integer not null default 0 check (precio_clp >= 0),
+  inicio date,
+  proximo_cobro date,
+  notas text,
+  updated_at timestamptz not null default now()
+);
+
+-- Sin policy para authenticated a propósito: solo el servidor (service_role,
+-- desde /api/admin/*) la lee y escribe.
+alter table suscripciones enable row level security;
+grant all on suscripciones to service_role;
+
+-- ----------------------------------------------------------------------
+-- Aviso diario para conversar y consentimientos (octubre 2026).
+-- Para un proyecto ya desplegado, correr solo este bloque en el SQL editor.
+-- ----------------------------------------------------------------------
+
+-- A qué hora Griyo le avisa a la persona mayor que la invita a conversar, y
+-- cuándo fue el último aviso (a ella y a su familia). Sin fila = valores por
+-- defecto (11:00, activo).
+create table if not exists preferencias_charla (
+  abuelo_id uuid primary key references abuelos(id) on delete cascade,
+  hora text not null default '11:00' check (hora ~ '^([01][0-9]|2[0-3]):[0-5][0-9]$'),
+  activo boolean not null default true,
+  ultimo_aviso timestamptz,
+  ultimo_aviso_familia timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+-- Quién aceptó los términos y la política de privacidad, de qué versión y
+-- cuándo. Una fila por cuenta y versión.
+create table if not exists consentimientos (
+  id uuid primary key default uuid_generate_v4(),
+  auth_user_id uuid not null references auth.users(id) on delete cascade,
+  version text not null,
+  aceptado_en timestamptz not null default now(),
+  unique (auth_user_id, version)
+);
+
+-- Sin policies para authenticated a propósito: solo el servidor (service_role)
+-- las lee y escribe.
+alter table preferencias_charla enable row level security;
+alter table consentimientos enable row level security;
+grant all on preferencias_charla, consentimientos to service_role;

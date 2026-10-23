@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { solicitarRecuperacion, isSupabaseAuthConfigured } from "@/lib/auth/familiarSession";
-import { CricketMark, CheckIcon } from "@/components/icons";
+import { CheckIcon } from "@/components/icons";
+import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
 
 export default function RecuperarCuentaPage() {
   const [email, setEmail] = useState("");
@@ -30,9 +31,7 @@ export default function RecuperarCuentaPage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 gap-6 bg-sand-200">
-      <div className="w-16 h-16 rounded-3xl bg-white shadow-warm-sm flex items-center justify-center">
-        <CricketMark className="w-8 h-8 text-ember-600" />
-      </div>
+      <GriyoMascota estado="idle" className="w-24 h-24 -mb-3 opacity-0 animate-fade-rise" />
 
       <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-warm-sm">
         {!isSupabaseAuthConfigured() ? (

@@ -13,6 +13,8 @@ import type {
   PushSubscriptionRow,
   Foto,
   PreguntaFamilia,
+  PreferenciaCharla,
+  Consentimiento,
 } from "@/lib/types";
 
 export const supabaseStore = {
@@ -448,6 +450,99 @@ export const supabaseStore = {
   },
   async deletePreguntaFamilia(id: string): Promise<boolean> {
     const { error } = await getSupabaseClient().from("preguntas_familia").delete().eq("id", id);
+    if (error) throw error;
+    return true;
+  },
+
+  // --- Seguimiento (solo fechas, sin el texto de las charlas) ---
+  async listConversacionesFechas(
+    abueloId: string,
+    desde: string
+  ): Promise<{ id: string; fecha: string }[]> {
+    const { data, error } = await getSupabaseClient()
+      .from("conversaciones")
+      .select("id,fecha")
+      .eq("abuelo_id", abueloId)
+      .gte("fecha", desde)
+      .order("fecha", { ascending: true })
+      .limit(20000);
+    if (error) throw error;
+    return (data ?? []) as { id: string; fecha: string }[];
+  },
+  async getConversacionesPorIds(ids: string[]): Promise<Conversacion[]> {
+    if (ids.length === 0) return [];
+    const { data, error } = await getSupabaseClient()
+      .from("conversaciones")
+      .select("*")
+      .in("id", ids);
+    if (error) throw error;
+    return data as Conversacion[];
+  },
+
+  // --- Aviso diario ---
+  async getPreferenciaCharla(abueloId: string): Promise<PreferenciaCharla | undefined> {
+    const { data, error } = await getSupabaseClient()
+      .from("preferencias_charla")
+      .select("*")
+      .eq("abuelo_id", abueloId)
+      .maybeSingle();
+    if (error) {
+      if (error.code === "42P01" || error.code === "PGRST205") return undefined;
+      throw error;
+    }
+    return (data as PreferenciaCharla) ?? undefined;
+  },
+  async listPreferenciasCharla(): Promise<PreferenciaCharla[]> {
+    const { data, error } = await getSupabaseClient().from("preferencias_charla").select("*");
+    if (error) {
+      if (error.code === "42P01" || error.code === "PGRST205") return [];
+      throw error;
+    }
+    return data as PreferenciaCharla[];
+  },
+  async guardarPreferenciaCharla(
+    abueloId: string,
+    patch: Partial<Pick<PreferenciaCharla, "hora" | "activo" | "ultimo_aviso" | "ultimo_aviso_familia">>
+  ): Promise<PreferenciaCharla> {
+    const { data, error } = await getSupabaseClient()
+      .from("preferencias_charla")
+      .upsert(
+        { abuelo_id: abueloId, ...patch, updated_at: new Date().toISOString() },
+        { onConflict: "abuelo_id" }
+      )
+      .select()
+      .single();
+    if (error) throw error;
+    return data as PreferenciaCharla;
+  },
+
+  // --- Consentimientos ---
+  async getConsentimiento(authUserId: string, version: string): Promise<Consentimiento | undefined> {
+    const { data, error } = await getSupabaseClient()
+      .from("consentimientos")
+      .select("*")
+      .eq("auth_user_id", authUserId)
+      .eq("version", version)
+      .maybeSingle();
+    if (error) throw error;
+    return (data as Consentimiento) ?? undefined;
+  },
+  async registrarConsentimiento(authUserId: string, version: string): Promise<Consentimiento> {
+    const { data, error } = await getSupabaseClient()
+      .from("consentimientos")
+      .upsert(
+        { auth_user_id: authUserId, version, aceptado_en: new Date().toISOString() },
+        { onConflict: "auth_user_id,version" }
+      )
+      .select()
+      .single();
+    if (error) throw error;
+    return data as Consentimiento;
+  },
+
+  // --- Borrado de una persona mayor y todo lo suyo ---
+  async eliminarAbuelo(abueloId: string): Promise<boolean> {
+    const { error } = await getSupabaseClient().from("abuelos").delete().eq("id", abueloId);
     if (error) throw error;
     return true;
   },

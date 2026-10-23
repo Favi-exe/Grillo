@@ -16,6 +16,10 @@ import DispositivosVinculados from "@/components/DispositivosVinculados";
 import LegadoVivoLibro from "@/components/LegadoVivoLibro";
 import FotosLegado from "@/components/FotosLegado";
 import PreguntasFamilia from "@/components/PreguntasFamilia";
+import SeguimientoFamilia from "@/components/SeguimientoFamilia";
+import PreferenciaCharla from "@/components/PreferenciaCharla";
+import ControlDatos from "@/components/ControlDatos";
+import ConsentimientoGate from "@/components/ConsentimientoGate";
 import OnboardingPerfil from "@/components/OnboardingPerfil";
 import OnboardingAbuelo from "@/components/OnboardingAbuelo";
 import { LogOutIcon } from "@/components/icons";
@@ -69,15 +73,26 @@ export default function FamiliaPage() {
   if (estado === "cargando" || estado === "sin_sesion") return null;
 
   if (estado === "onboarding_perfil") {
-    return <OnboardingPerfil onListo={cargarPerfil} />;
+    return (
+      <>
+        <ConsentimientoGate />
+        <OnboardingPerfil onListo={cargarPerfil} />
+      </>
+    );
   }
 
   if (estado === "onboarding_abuelo") {
-    return <OnboardingAbuelo onListo={cargarPerfil} />;
+    return (
+      <>
+        <ConsentimientoGate />
+        <OnboardingAbuelo onListo={cargarPerfil} />
+      </>
+    );
   }
 
   return (
     <main className="min-h-screen bg-sand-200 px-4 py-8">
+      <ConsentimientoGate />
       <div className="max-w-3xl mx-auto flex items-center justify-between mb-6 opacity-0 animate-fade-rise">
         <div>
           <h1 className="font-heading text-3xl font-semibold text-sand-900">
@@ -105,6 +120,9 @@ export default function FamiliaPage() {
           <AlertasFamiliar />
         </div>
         <div className="opacity-0 animate-fade-rise stagger-1">
+          <SeguimientoFamilia nombrePersona={abuelo?.nombre ?? ""} />
+        </div>
+        <div className="opacity-0 animate-fade-rise stagger-1">
           <EstadoAnimoFamiliar />
         </div>
         <div className="opacity-0 animate-fade-rise stagger-1">
@@ -117,6 +135,9 @@ export default function FamiliaPage() {
         </div>
         <div className="opacity-0 animate-fade-rise stagger-1">
           <DispositivosVinculados />
+        </div>
+        <div className="opacity-0 animate-fade-rise stagger-1">
+          <PreferenciaCharla nombrePersona={abuelo?.nombre ?? ""} />
         </div>
         <div className="opacity-0 animate-fade-rise stagger-2">
           <PreguntaMemoria abueloNombre={abuelo?.nombre ?? ""} />
@@ -134,6 +155,9 @@ export default function FamiliaPage() {
           <LegadoVivoLibro abueloNombre={abuelo?.nombre ?? ""} />
         </div>
         <RecordatoriosFamiliar />
+        <div className="opacity-0 animate-fade-rise stagger-3">
+          <ControlDatos nombrePersona={abuelo?.nombre ?? ""} />
+        </div>
       </div>
     </main>
   );

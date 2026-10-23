@@ -5,6 +5,7 @@ import { fetchAbuelo } from "@/lib/auth/fetchConAuth";
 import type { Recordatorio } from "@/lib/types";
 import { TipoRecordatorioIcon, TIPO_INFO } from "@/components/TipoRecordatorioIcon";
 import { BellIcon, CheckIcon } from "@/components/icons";
+import Abuela from "@/components/ilustraciones/Abuela";
 
 function horaActual(): string {
   const now = new Date();
@@ -75,7 +76,7 @@ export default function RecordatoriosPanel() {
       {aviso && (
         <div className="bg-gold-400/25 border-2 border-gold-500 rounded-3xl p-4 mb-4 flex items-center gap-3 shadow-warm-sm animate-pop-in">
           <span className="w-12 h-12 shrink-0 rounded-2xl bg-gold-500 text-white flex items-center justify-center animate-glow-pulse">
-            <BellIcon className="w-6 h-6" />
+            <BellIcon className="w-6 h-6 animate-wave-hand" style={{ transformOrigin: "50% 15%" }} />
           </span>
           <div className="flex-1">
             <p className="font-semibold text-sand-900 text-lg">¡Es hora de recordar!</p>
@@ -91,9 +92,12 @@ export default function RecordatoriosPanel() {
         </div>
       )}
 
-      <h2 className="font-heading text-xl font-semibold text-sand-900 mb-3">
-        Tus recordatorios de hoy
-      </h2>
+      <div className="flex items-end justify-between gap-3 mb-3">
+        <h2 className="font-heading text-xl font-semibold text-sand-900">
+          Tus recordatorios de hoy
+        </h2>
+        <Abuela saludando className="w-20 h-auto shrink-0 -mb-1" />
+      </div>
       {recordatorios.length === 0 ? (
         <p className="text-sand-700 text-lg">No tienes recordatorios activos todavía.</p>
       ) : (

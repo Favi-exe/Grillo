@@ -57,11 +57,18 @@ export async function POST(req: NextRequest) {
     // Una respuesta de "límite alcanzado" no cuenta como uso nuevo — si
     // se guardara, cada intento posterior seguiría empujando la ventana.
     if (!alcanzoElLimite) {
-      createConversacion({
-        abuelo_id: abueloId,
-        fecha: new Date().toISOString(),
-        transcripcion_completa: nuevaHistoria,
-      }).catch((err) => console.error("[chat] no se pudo persistir conversación:", err));
+      // Se espera el guardado: en Vercel el servidor puede congelarse apenas
+      // se responde, y una escritura sin await se perdía — eso subcontaba el
+      // uso (panel /admin) y el tope de mensajes diarios.
+      try {
+        await createConversacion({
+          abuelo_id: abueloId,
+          fecha: new Date().toISOString(),
+          transcripcion_completa: nuevaHistoria,
+        });
+      } catch (err) {
+        console.error("[chat] no se pudo persistir conversación:", err);
+      }
 
       // Solo chequea el patrón de ánimo cuando se guardó una memoria nueva
       // esta vuelta — no en cada mensaje, para no gastar una consulta y una

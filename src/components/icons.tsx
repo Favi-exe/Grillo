@@ -331,6 +331,98 @@ export function SearchIcon(props: IconProps) {
   );
 }
 
+export function ChartIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <line x1="4" y1="20" x2="20" y2="20" />
+      <rect x="5.5" y="11" width="3" height="9" rx="1" />
+      <rect x="10.5" y="5" width="3" height="15" rx="1" />
+      <rect x="15.5" y="9" width="3" height="11" rx="1" />
+    </Base>
+  );
+}
+
+export function WalletIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3" />
+      <path d="M4 7.5V17a2 2 0 0 0 2 2h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 1 4 7.5Z" />
+      <circle cx="15.5" cy="13.5" r="1" />
+    </Base>
+  );
+}
+
+export function XIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <line x1="6" y1="6" x2="18" y2="18" />
+      <line x1="18" y1="6" x2="6" y2="18" />
+    </Base>
+  );
+}
+
+export function PhoneIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="7" y="2.5" width="10" height="19" rx="2.5" />
+      <line x1="11" y1="18.5" x2="13" y2="18.5" />
+    </Base>
+  );
+}
+
+export function MailIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="5.5" width="18" height="13" rx="2.5" />
+      <path d="m4 8 8 6 8-6" />
+    </Base>
+  );
+}
+
+export function ClockIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3 2" />
+    </Base>
+  );
+}
+
+export function TrendUpIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m4 16 5-5 4 4 7-8" />
+      <path d="M15 7h5v5" />
+    </Base>
+  );
+}
+
+export function TrendDownIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m4 8 5 5 4-4 7 8" />
+      <path d="M15 17h5v-5" />
+    </Base>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m9 5 7 7-7 7" />
+    </Base>
+  );
+}
+
+export function UserIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="12" cy="8" r="3.6" />
+      <path d="M4.5 20a7.5 7.5 0 0 1 15 0" />
+    </Base>
+  );
+}
+
 /**
  * Marca de Griyo — un grillo estilizado y redondeado, mismo lenguaje de
  * trazo que el resto del set. Se usa como firma de marca (header, favicon,

@@ -128,3 +128,26 @@ async function backfillVectorStore(abueloId: string): Promise<void> {
   }
   writeLocalStore([...readLocalStore(), ...nuevos]);
 }
+
+/**
+ * Borra todos los vectores de una persona mayor (pedido de borrado de datos).
+ * En Pinecone cada persona es su propio namespace; en modo mock se filtra el
+ * archivo local. Nunca lanza: un fallo se loguea y quien llama sigue adelante.
+ */
+export async function eliminarMemoriasDeAbuelo(abueloId: string): Promise<void> {
+  try {
+    if (isPineconeConfigured()) {
+      const index = await getPineconeIndex();
+      await index.namespace(abueloId).deleteAll();
+    }
+  } catch (err) {
+    console.error("[pinecone] no se pudieron borrar los vectores de", abueloId, err);
+  }
+  try {
+    const registros = readLocalStore();
+    const restantes = registros.filter((r) => r.abueloId !== abueloId);
+    if (restantes.length !== registros.length) writeLocalStore(restantes);
+  } catch (err) {
+    console.error("[pinecone] no se pudo limpiar el store local de", abueloId, err);
+  }
+}
