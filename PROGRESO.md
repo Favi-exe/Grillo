@@ -3,6 +3,56 @@
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
 
+## Sesión 19 — Registro con WhatsApp/teléfono (el correo pasa a ser opcional)
+
+Pedido: que crear la cuenta no obligue a tener correo; entrar con el número de
+WhatsApp y, si se olvida la contraseña, recibir el link de recuperación por
+WhatsApp.
+
+- **Cómo funciona por dentro**: Supabase Auth exige un correo, así que cada
+  cuenta con teléfono usa un correo sintético derivado del número
+  (`56912345678@telefono.griyo.invalid`; `.invalid` no puede recibir correo).
+  El teléfono y el correo real opcional viven en `app_metadata` (el cliente no
+  puede modificarlo). Las cuentas antiguas, con correo, siguen entrando igual.
+  `src/lib/auth/telefono.ts` normaliza (Chile por defecto: `9 1234 5678`,
+  `+56 9 1234 5678`, `56912345678` son la misma cuenta).
+- **Registro**: `/api/registro` (familiar) y `/api/registro-mayor` (persona
+  mayor) crean la cuenta ya confirmada vía Admin API — sin mail de
+  confirmación. `/registro` y el paso guiado de `/registro-mayor` piden el
+  número; el correo es un campo opcional.
+- **Login**: un solo campo "WhatsApp o correo" (`iniciarSesionConIdentificador`).
+  El error de credenciales ahora sale en español.
+- **Recuperación**: `/api/recuperar` genera el link con
+  `auth.admin.generateLink` (Supabase no manda nada) y lo envía por WhatsApp,
+  y al correo opcional si la cuenta lo tiene. Siempre responde lo mismo exista
+  o no la cuenta (no filtra qué números están registrados) y espera 60 s entre
+  envíos por cuenta. Sin WhatsApp ni correo configurados, en producción
+  responde 503; en desarrollo devuelve el link en la respuesta para poder probar.
+- **Avisos a la familia**: emergencia, ánimo bajo y días sin charlar ahora usan
+  `notificarUsuario` (`src/lib/notify/contacto.ts`): correo si lo dio y/o
+  WhatsApp si tiene teléfono. Sin esto, una familia registrada solo con
+  teléfono habría dejado de recibir hasta las alertas de emergencia.
+- **WhatsApp** (`src/lib/notify/whatsapp.ts`): Twilio, con mock si faltan
+  `TWILIO_*` (mismo patrón que el resto). Ver `.env.example`.
+- **Panel /admin**: muestra el teléfono (no el correo sintético) y la búsqueda
+  también lo encuentra.
+
+Pendiente / a tener en cuenta:
+- **Para que salga WhatsApp de verdad** hace falta una cuenta de Twilio con
+  WhatsApp habilitado y cargar las `TWILIO_*`. WhatsApp solo deja escribirle a
+  alguien que no te escribió antes con una **plantilla aprobada**: crear las
+  plantillas en Twilio y poner sus Content SID en
+  `TWILIO_WHATSAPP_CONTENT_SID_*`. Sin plantilla se manda texto libre, que
+  sirve en el sandbox de Twilio pero no en producción.
+- **El número no se verifica** (no hay código de confirmación por WhatsApp): hoy
+  alguien podría registrar un número ajeno. Lo agrava poco (el link de
+  recuperación va siempre al número registrado) pero conviene sumar una
+  verificación por código cuando Twilio esté andando.
+- Invitar a un familiar sigue siendo solo por correo.
+- Resend sigue en modo de pruebas (solo escribe a griyo.soporte@gmail.com):
+  hasta verificar un dominio, los correos a las familias no salen, y WhatsApp
+  pasa a ser el canal que de verdad funciona.
+
 ## Sesión 18 — App más viva (pedido de Ceci)
 
 Dibujos propios y movimiento para llamar la atención de las personas mayores

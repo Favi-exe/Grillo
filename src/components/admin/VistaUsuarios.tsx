@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import type { ResumenAdmin, UsuarioAdmin } from "@/lib/admin/resumen";
 import { Avatar, Chip, ChipPlan, Tarjeta, VacioInfo, fechaCorta, haceCuanto, numero } from "./ui";
-import { AlertIcon, ChevronRightIcon, MailIcon, SearchIcon } from "@/components/icons";
+import { AlertIcon, ChevronRightIcon, MailIcon, PhoneIcon, SearchIcon } from "@/components/icons";
+import { textoDeContacto } from "@/lib/auth/telefono";
 
 type Filtro = "todos" | "familiar" | "abuelo" | "pendiente";
 
@@ -19,12 +20,12 @@ function Fila({ u, onAbrir }: { u: UsuarioAdmin; onAbrir: (id: string) => void }
   return (
     <li className={`${COLUMNAS} flex flex-col gap-3 px-4 sm:px-5 py-4 border-b border-sand-200 last:border-b-0`}>
       <div className="flex items-center gap-3 min-w-0">
-        <Avatar nombre={u.nombre ?? u.email} />
+        <Avatar nombre={u.nombre ?? u.telefono ?? u.email} />
         <div className="min-w-0">
           <p className="font-semibold text-sand-900 truncate">{u.nombre ?? "Sin nombre todavía"}</p>
           <p className="text-sm text-sand-700 truncate flex items-center gap-1">
-            <MailIcon className="w-4 h-4 shrink-0" />
-            <span className="truncate">{u.email ?? "sin correo"}</span>
+            {u.telefono ? <PhoneIcon className="w-4 h-4 shrink-0" /> : <MailIcon className="w-4 h-4 shrink-0" />}
+            <span className="truncate">{textoDeContacto(u.telefono, u.email)}</span>
           </p>
           <div className="flex flex-wrap gap-1.5 mt-1.5">
             <Chip tono={u.rol === "familiar" ? "info" : u.rol === "abuelo" ? "ember" : "neutro"}>{etiquetaRol(u)}</Chip>
@@ -98,6 +99,7 @@ export default function VistaUsuarios({ resumen, onAbrirFamilia }: { resumen: Re
       return (
         (u.nombre ?? "").toLowerCase().includes(q) ||
         (u.email ?? "").toLowerCase().includes(q) ||
+        (u.telefono ?? "").replace(/\s/g, "").includes(q.replace(/\s/g, "")) ||
         (u.abueloNombre ?? "").toLowerCase().includes(q)
       );
     });

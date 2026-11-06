@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient, isSupabaseConfigured } from "@/lib/db/supabaseClient";
 import { createUsuario, createAbuelo, updateUsuario } from "@/lib/db";
+import { esEmailValido, normalizarTelefono } from "@/lib/auth/telefono";
+import { crearCuentaAuthConTelefono, CuentaYaExisteError } from "@/lib/auth/crearCuenta";
 
 /**
  * Alta directa de la persona mayor, sin depender de que un familiar la
  * arme primero. Pensado para alguien que va a usar a Griyo como
  * herramienta de compañía/memoria por su cuenta (ej. dificultades de
- * memoria) — por eso la cuenta se crea ya confirmada (vía la Admin API de
- * Supabase, con email_confirm:true) en vez de esperar que confirme un mail,
+ * memoria) — por eso se identifica con su número de celular (el correo es
+ * opcional) y la cuenta se crea ya confirmada, sin esperar ningún mail,
  * que es fricción que este público no necesita. La contraseña la genera
  * Griyo, simple y ya resuelta — la persona no tiene que inventarla ni
  * recordarla, porque el dispositivo va a quedar con la sesión guardada.
@@ -42,27 +44,41 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { nombre, email } = body as { nombre: string; email: string };
-    if (!nombre?.trim() || !email?.trim()) {
-      return NextResponse.json({ error: "Falta el nombre o el correo" }, { status: 400 });
+    const { nombre, telefono, email } = body as { nombre?: string; telefono?: string; email?: string };
+    if (!nombre?.trim()) {
+      return NextResponse.json({ error: "Falta el nombre" }, { status: 400 });
+    }
+    const telefonoNormalizado = normalizarTelefono(telefono ?? "");
+    if (!telefonoNormalizado) {
+      return NextResponse.json(
+        { error: "Escribe un número de celular válido, por ejemplo +56 9 1234 5678." },
+        { status: 400 }
+      );
+    }
+    const emailContacto = email?.trim() || null;
+    if (emailContacto && !esEmailValido(emailContacto)) {
+      return NextResponse.json({ error: "Ese correo no parece válido." }, { status: 400 });
     }
 
     const password = generarPasswordSimple();
 
-    const { data: creado, error: errorAuth } = await getSupabaseClient().auth.admin.createUser({
-      email: email.trim(),
-      password,
-      email_confirm: true,
-    });
-
-    if (errorAuth || !creado.user) {
-      const yaExiste = errorAuth?.message?.toLowerCase().includes("already registered");
+    let userId: string;
+    try {
+      ({ userId } = await crearCuentaAuthConTelefono({
+        telefono: telefonoNormalizado,
+        password,
+        emailContacto,
+      }));
+    } catch (errorAuth) {
+      if (errorAuth instanceof CuentaYaExisteError) {
+        return NextResponse.json(
+          { error: "Ya existe una cuenta con ese número." },
+          { status: 400 }
+        );
+      }
+      console.error("[api/registro-mayor] fallo creando el usuario de auth:", errorAuth);
       return NextResponse.json(
-        {
-          error: yaExiste
-            ? "Ya existe una cuenta con ese correo."
-            : "No pudimos crear la cuenta. Probemos de nuevo.",
-        },
+        { error: "No pudimos crear la cuenta. Probemos de nuevo." },
         { status: 400 }
       );
     }
@@ -73,7 +89,7 @@ export async function POST(req: NextRequest) {
         rol: "abuelo",
         relacion_con_abuelo: null,
         abuelo_id: null,
-        auth_user_id: creado.user.id,
+        auth_user_id: userId,
       });
 
       const abuelo = await createAbuelo({
@@ -84,20 +100,20 @@ export async function POST(req: NextRequest) {
 
       await updateUsuario(usuario.id, { abuelo_id: abuelo.id });
 
-      return NextResponse.json({ email: email.trim(), password, abuelo }, { status: 201 });
+      return NextResponse.json({ telefono: telefonoNormalizado, password, abuelo }, { status: 201 });
     } catch (errorPerfil) {
       // Si el perfil (usuarios/abuelos) no se termina de crear, no dejamos
-      // un usuario de Auth huérfano: sin esto, el correo queda con login
+      // un usuario de Auth huérfano: sin esto, el número queda con login
       // válido pero sin perfil (justo el fallo que reportó Cecilia), y
       // Supabase ya no deja recrearlo porque "ya existe" — quedaría
       // atrapado sin poder reintentar. Revertimos el usuario de Auth para
-      // que la persona pueda volver a intentarlo con el mismo correo.
+      // que la persona pueda volver a intentarlo con el mismo número.
       console.error(
         "[api/registro-mayor] fallo creando el perfil, revirtiendo el usuario de auth:",
         errorPerfil
       );
       await getSupabaseClient()
-        .auth.admin.deleteUser(creado.user.id)
+        .auth.admin.deleteUser(userId)
         .catch((e) =>
           console.error("[api/registro-mayor] no se pudo revertir el usuario de auth:", e)
         );

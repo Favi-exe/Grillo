@@ -2,20 +2,21 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { iniciarSesion, isSupabaseAuthConfigured } from "@/lib/auth/familiarSession";
+import { iniciarSesionConIdentificador, isSupabaseAuthConfigured } from "@/lib/auth/familiarSession";
+import { esEmailValido, formatearTelefono, normalizarTelefono } from "@/lib/auth/telefono";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { CheckIcon } from "@/components/icons";
 import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
 import { ParejaSaludando } from "@/components/ilustraciones/Escenas";
 import CasillaConsentimiento from "@/components/CasillaConsentimiento";
 
-type Paso = "intro" | "nombre" | "email" | "confirmar" | "listo";
+type Paso = "intro" | "nombre" | "telefono" | "confirmar" | "listo";
 
 const NARRACION: Record<Paso, string> = {
   intro:
     "Hola. Soy Griyo. Vamos a crear tu cuenta juntos. Son solo unos pasos sencillos, yo te voy guiando en cada uno.",
   nombre: "Primero, dime cómo te llamas.",
-  email: "Ahora necesito tu correo electrónico, para guardar tu cuenta de forma segura.",
+  telefono: "Ahora necesito el número de tu celular, para guardar tu cuenta de forma segura.",
   confirmar: "Perfecto. Cuando quieras, creamos tu cuenta.",
   listo: "Listo. Tu cuenta ya está creada. Ya puedes empezar a hablar conmigo.",
 };
@@ -24,7 +25,9 @@ export default function RegistroMayorPage() {
   const router = useRouter();
   const [paso, setPaso] = useState<Paso>("intro");
   const [nombre, setNombre] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
+  const [errorTelefono, setErrorTelefono] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const [acepto, setAcepto] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,14 +80,14 @@ export default function RegistroMayorPage() {
       const res = await fetch("/api/registro-mayor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, email }),
+        body: JSON.stringify({ nombre, telefono, email: email.trim() || undefined }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No pudimos crear la cuenta");
 
       // Establece la sesión en ESTE navegador — de acá en más queda
       // guardada, nunca más va a pedir iniciar sesión en este dispositivo.
-      await iniciarSesion(data.email, data.password);
+      await iniciarSesionConIdentificador(data.telefono, data.password);
       setPasswordGenerada(data.password);
       setPaso("listo");
     } catch (err) {
@@ -130,7 +133,7 @@ export default function RegistroMayorPage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (nombre.trim()) setPaso("email");
+              if (nombre.trim()) setPaso("telefono");
             }}
             className="flex flex-col gap-5"
           >
@@ -151,16 +154,25 @@ export default function RegistroMayorPage() {
           </form>
         )}
 
-        {paso === "email" && (
+        {paso === "telefono" && (
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (email.trim()) setPaso("confirmar");
+              if (!normalizarTelefono(telefono)) {
+                setErrorTelefono("Revisa el número: tiene que ser un celular, por ejemplo +56 9 1234 5678.");
+                return;
+              }
+              if (email.trim() && !esEmailValido(email)) {
+                setErrorTelefono("Ese correo no parece válido. Puedes dejarlo en blanco.");
+                return;
+              }
+              setErrorTelefono(null);
+              setPaso("confirmar");
             }}
             className="flex flex-col gap-5"
           >
             <h1 className="font-heading text-2xl font-semibold text-sand-900 text-center">
-              Ahora tu correo electrónico
+              Ahora el número de tu celular
             </h1>
             <p className="text-lg text-sand-700 text-center">
               Es para guardar tu cuenta de forma segura. Si no estás seguro/a, pídele una mano a
@@ -168,13 +180,29 @@ export default function RegistroMayorPage() {
             </p>
             <input
               autoFocus
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@correo.com"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              placeholder="+56 9 1234 5678"
               className={inputCls}
             />
-            <button type="submit" disabled={!email.trim()} className={botonCls}>
+            <label className="flex flex-col gap-2">
+              <span className="text-lg text-sand-700 text-center">
+                Si tienes correo, puedes agregarlo (es opcional)
+              </span>
+              <input
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                className={inputCls}
+              />
+            </label>
+            {errorTelefono && <p className="text-clay-600 text-lg text-center">{errorTelefono}</p>}
+            <button type="submit" disabled={!telefono.trim()} className={botonCls}>
               Continuar
             </button>
           </form>
@@ -186,7 +214,11 @@ export default function RegistroMayorPage() {
               Perfecto, {nombre}
             </h1>
             <p className="text-xl text-sand-800 leading-relaxed">
-              Voy a crear tu cuenta con el correo <span className="font-semibold">{email}</span>.
+              Voy a crear tu cuenta con el número{" "}
+              <span className="font-semibold whitespace-nowrap">
+                {formatearTelefono(normalizarTelefono(telefono) ?? telefono)}
+              </span>
+              .
             </p>
             <div className="text-left bg-sand-100 rounded-2xl p-4">
               <CasillaConsentimiento checked={acepto} onChange={setAcepto} grande />
@@ -196,11 +228,11 @@ export default function RegistroMayorPage() {
               {cargando ? "Creando tu cuenta..." : "Crear mi cuenta"}
             </button>
             <button
-              onClick={() => setPaso("email")}
+              onClick={() => setPaso("telefono")}
               disabled={cargando}
               className="text-sand-600 underline text-lg"
             >
-              Corregir el correo
+              Corregir el número
             </button>
           </div>
         )}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { iniciarSesionFamiliar, isSupabaseAuthConfigured, haySesionActiva } from "@/lib/auth/familiarSession";
+import { iniciarSesionConIdentificador, isSupabaseAuthConfigured, haySesionActiva } from "@/lib/auth/familiarSession";
 import { obtenerTokenDispositivo } from "@/lib/auth/deviceToken";
 import { fetchFamiliar } from "@/lib/auth/fetchConAuth";
 
@@ -13,7 +13,7 @@ import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
 export default function LoginPage() {
   const router = useRouter();
   const [modo, setModo] = useState<"familiar" | "abuelo">("familiar");
-  const [email, setEmail] = useState("");
+  const [identificador, setIdentificador] = useState("");
   const [password, setPassword] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +38,7 @@ export default function LoginPage() {
     setError(null);
     setCargando(true);
     try {
-      await iniciarSesionFamiliar(email, password);
+      await iniciarSesionConIdentificador(identificador, password);
       // Si esta cuenta es de una persona mayor que se registró sola (rol
       // "abuelo"), la mandamos a su pantalla de conversación, no al panel
       // administrativo de familia.
@@ -88,11 +88,13 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="flex flex-col gap-3">
               <h1 className="font-heading text-2xl font-semibold text-sand-900 mb-1">Ingresar</h1>
               <input
-                type="email"
+                type="text"
+                inputMode="email"
+                autoComplete="username"
                 required
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder="WhatsApp o correo"
+                value={identificador}
+                onChange={(e) => setIdentificador(e.target.value)}
                 className={inputCls}
               />
               <PasswordInput
@@ -165,11 +167,13 @@ export default function LoginPage() {
                   </h1>
                   <form onSubmit={handleLogin} className="flex flex-col gap-3 text-left">
                     <input
-                      type="email"
+                      type="text"
+                      inputMode="email"
+                      autoComplete="username"
                       required
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="WhatsApp o correo"
+                      value={identificador}
+                      onChange={(e) => setIdentificador(e.target.value)}
                       className={inputCls}
                     />
                     <PasswordInput

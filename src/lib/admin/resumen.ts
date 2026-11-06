@@ -1,4 +1,6 @@
 import { getSupabaseClient } from "@/lib/db/supabaseClient";
+import { contactoDeUsuarioAuth } from "@/lib/notify/contacto";
+import { formatearTelefono } from "@/lib/auth/telefono";
 import type { EstadoSuscripcion, Suscripcion } from "@/lib/types";
 
 /**
@@ -20,6 +22,7 @@ export interface FamiliarAdmin {
   usuarioId: string;
   nombre: string;
   email: string | null;
+  telefono: string | null;
   relacion: string | null;
   ultimoLogin: string | null;
   creadoEn: string | null;
@@ -64,6 +67,7 @@ export type EstadoCuenta = "completa" | "sin_perfil" | "sin_abuelo";
 export interface UsuarioAdmin {
   authId: string;
   email: string | null;
+  telefono: string | null;
   confirmado: boolean;
   creadoEn: string | null;
   ultimoLogin: string | null;
@@ -153,6 +157,7 @@ async function traerTodo(
 
 interface CuentaAuth {
   email: string | null;
+  telefono: string | null;
   ultimoLogin: string | null;
   creadoEn: string | null;
   confirmado: boolean;
@@ -165,8 +170,10 @@ async function listarCuentasAuth(): Promise<Map<string, CuentaAuth>> {
     const { data, error } = await db.auth.admin.listUsers({ page: pagina, perPage: 1000 });
     if (error) throw error;
     for (const u of data.users) {
+      const contacto = contactoDeUsuarioAuth(u);
       mapa.set(u.id, {
-        email: u.email ?? null,
+        email: contacto.email,
+        telefono: contacto.telefono ? formatearTelefono(contacto.telefono) : null,
         ultimoLogin: u.last_sign_in_at ?? null,
         creadoEn: u.created_at ?? null,
         confirmado: Boolean(u.email_confirmed_at),
@@ -348,6 +355,7 @@ export async function construirResumenAdmin(): Promise<ResumenAdmin> {
           usuarioId: u.id as string,
           nombre: u.nombre as string,
           email: cuenta?.email ?? null,
+          telefono: cuenta?.telefono ?? null,
           relacion: (u.relacion_con_abuelo as string | null) ?? null,
           ultimoLogin: cuenta?.ultimoLogin ?? null,
           creadoEn: (u.created_at as string | null) ?? null,
@@ -420,6 +428,7 @@ export async function construirResumenAdmin(): Promise<ResumenAdmin> {
     return {
       authId,
       email: cuenta.email,
+      telefono: cuenta.telefono,
       confirmado: cuenta.confirmado,
       creadoEn: cuenta.creadoEn,
       ultimoLogin: cuenta.ultimoLogin,
@@ -457,7 +466,7 @@ export async function construirResumenAdmin(): Promise<ResumenAdmin> {
   const n = familias.length;
   const embudo = [
     { etiqueta: "Familias registradas", valor: n },
-    { etiqueta: "Con un familiar con cuenta", valor: familias.filter((f) => f.familiares.some((m) => m.email)).length },
+    { etiqueta: "Con un familiar con cuenta", valor: familias.filter((f) => f.familiares.some((m) => m.email || m.telefono)).length },
     { etiqueta: "Con dispositivo o cuenta propia", valor: familias.filter((f) => f.dispositivosDetalle.length > 0 || f.tieneCuentaPropia).length },
     { etiqueta: "Ya conversaron con Griyo", valor: familias.filter((f) => f.mensajesTotal > 0).length },
     { etiqueta: "Activas esta semana", valor: familias.filter((f) => f.mensajes7d > 0).length },

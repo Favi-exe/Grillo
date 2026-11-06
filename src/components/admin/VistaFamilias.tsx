@@ -101,7 +101,12 @@ export default function VistaFamilias({
       if (!q) return true;
       return (
         f.nombre.toLowerCase().includes(q) ||
-        f.familiares.some((m) => m.nombre.toLowerCase().includes(q) || (m.email ?? "").toLowerCase().includes(q))
+        f.familiares.some(
+          (m) =>
+            m.nombre.toLowerCase().includes(q) ||
+            (m.email ?? "").toLowerCase().includes(q) ||
+            (m.telefono ?? "").replace(/\s/g, "").includes(q.replace(/\s/g, ""))
+        )
       );
     });
     const t = (iso: string | null) => (iso ? new Date(iso).getTime() : 0);

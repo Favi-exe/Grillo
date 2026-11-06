@@ -1,6 +1,6 @@
 import { listMemorias, listFamiliaresDeAbuelo, crearAlertaAnimo, listAlertasAnimo } from "@/lib/db";
-import { getSupabaseClient, isSupabaseConfigured } from "@/lib/db/supabaseClient";
-import { enviarEmail } from "@/lib/notify/email";
+import { isSupabaseConfigured } from "@/lib/db/supabaseClient";
+import { notificarUsuario } from "@/lib/notify/contacto";
 import { obtenerPuntosAnimo } from "@/lib/animoDatos";
 import type { Memoria } from "@/lib/types";
 import type Anthropic from "@anthropic-ai/sdk";
@@ -98,18 +98,18 @@ async function avisarFamiliaPorAnimo(
 ): Promise<void> {
   const familiares = await listFamiliaresDeAbuelo(abueloId);
   if (familiares.length === 0) return;
-  const client = getSupabaseClient();
 
   await Promise.all(
     familiares.map(async (familiar) => {
       if (!familiar.auth_user_id) return;
-      const { data, error } = await client.auth.admin.getUserById(familiar.auth_user_id);
-      const email = data?.user?.email;
-      if (error || !email) return;
-      await enviarEmail({
-        to: email,
-        subject: `💭 ${nombreAbuelo} viene con el ánimo más bajo`,
+      await notificarUsuario(familiar.auth_user_id, {
+        asunto: `💭 ${nombreAbuelo} viene con el ánimo más bajo`,
         html: `<p>${resumen}</p>`,
+        texto: `💭 ${nombreAbuelo} viene con el ánimo más bajo.\n\n${resumen}`,
+        plantillaWhatsApp: {
+          contentSid: process.env.TWILIO_WHATSAPP_CONTENT_SID_ANIMO,
+          variables: { "1": nombreAbuelo, "2": resumen },
+        },
       });
     })
   );

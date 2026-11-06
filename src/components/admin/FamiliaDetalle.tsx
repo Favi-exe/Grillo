@@ -19,6 +19,7 @@ import {
   textoCobro,
 } from "./ui";
 import { AlertIcon, ClockIcon, MailIcon, PhoneIcon, UserIcon, XIcon } from "@/components/icons";
+import { textoDeContacto } from "@/lib/auth/telefono";
 
 function Dato({ valor, etiqueta }: { valor: number; etiqueta: string }) {
   return (
@@ -148,8 +149,12 @@ export default function FamiliaDetalle({
                     {m.relacion && <span className="font-normal text-sand-700"> · {m.relacion}</span>}
                   </p>
                   <p className="text-sm text-sand-700 truncate">
-                    <MailIcon className="w-4 h-4 inline -mt-0.5 mr-1" />
-                    {m.email ?? "sin correo"}
+                    {m.telefono ? (
+                      <PhoneIcon className="w-4 h-4 inline -mt-0.5 mr-1" />
+                    ) : (
+                      <MailIcon className="w-4 h-4 inline -mt-0.5 mr-1" />
+                    )}
+                    {textoDeContacto(m.telefono, m.email)}
                   </p>
                 </div>
                 <p className="text-sm text-sand-700 text-right shrink-0">
