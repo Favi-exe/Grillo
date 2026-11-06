@@ -18,13 +18,14 @@ export default function PrivacidadPage() {
 
       <h2>1. Qué datos usamos</h2>
       <ul>
-        <li><strong>De la cuenta:</strong> tu nombre, tu correo y, si eres familiar, tu relación con la persona mayor.</li>
+        <li><strong>De la cuenta:</strong> tu nombre, tu número de teléfono (el de WhatsApp, con el que entras a tu cuenta), tu correo si decides darlo (es opcional) y, si eres familiar, tu relación con la persona mayor.</li>
         <li><strong>De la persona mayor:</strong> su nombre, su fecha de nacimiento y notas generales si la familia las agrega.</li>
         <li><strong>Lo que conversa con Griyo:</strong> los mensajes por voz o texto y las respuestas de Griyo, de los cuales se guardan resúmenes de historias (&quot;memorias&quot;), con su tema y la emoción que Griyo percibe.</li>
         <li><strong>Su ánimo:</strong> lo que la persona marca en &quot;¿cómo te sientes hoy?&quot; y lo que Griyo percibe en las charlas.</li>
         <li><strong>Su rutina:</strong> recordatorios, fotos que se suman al libro, preguntas que deja la familia y la hora de aviso diario elegida.</li>
         <li><strong>De uso:</strong> fechas de las charlas, dispositivos vinculados y suscripciones a notificaciones.</li>
-        <li><strong>Señales:</strong> a partir de lo anterior, Griyo calcula indicadores de contacto y de cambios en la conversación. Son orientativos, no un diagnóstico.</li>
+        <li><strong>Ritmo del habla:</strong> cuando la persona conversa hablando, su dispositivo mide el ritmo con que habla (palabras por minuto y pausas). No grabamos ni enviamos el audio: solo se guardan esas medidas numéricas, junto al mensaje. Si tu dispositivo no permite esta medición, no se hace.</li>
+        <li><strong>Señales:</strong> a partir de lo anterior, Griyo calcula indicadores de contacto y de cambios en la conversación (por ejemplo, variedad de vocabulario, repeticiones, olvidos, ritmo del habla y pausas), comparando a la persona con su propio patrón. Son orientativos, no un diagnóstico, y no están validados clínicamente.</li>
       </ul>
       <p>
         Parte de estos datos puede revelar información de salud (por ejemplo, un estado de ánimo o algo que la
@@ -35,7 +36,7 @@ export default function PrivacidadPage() {
       <h2>2. Para qué los usamos</h2>
       <ul>
         <li>Conversar con la persona mayor, recordarle sus medicamentos y citas, y guardar sus historias.</li>
-        <li>Avisarle a la familia cuando el ánimo viene bajo, cuando se pide ayuda o cuando lleva días sin conversar.</li>
+        <li>Avisarle a la familia, por correo o por WhatsApp según los datos que haya dado, cuando el ánimo viene bajo, cuando se pide ayuda o cuando lleva días sin conversar, y enviarte por WhatsApp el link para recuperar tu contraseña si lo pides.</li>
         <li>Armar el libro Legado Vivo y los informes de seguimiento para la familia.</li>
         <li>Mantener la seguridad y el funcionamiento del servicio.</li>
       </ul>
@@ -52,7 +53,7 @@ export default function PrivacidadPage() {
       <p>
         Para funcionar usamos proveedores que tratan datos por encargo nuestro: servicios de inteligencia artificial para
         las conversaciones (Anthropic), de voz (ElevenLabs), de base de datos y archivos (Supabase), de búsqueda de
-        historias (Pinecone), de alojamiento (Vercel) y de correo (Resend). Algunos están fuera de Chile, por ejemplo en
+        historias (Pinecone), de alojamiento (Vercel), de correo (Resend) y de mensajes por WhatsApp (Twilio). Además, el reconocimiento de voz (convertir lo que se dice en texto) lo hace el navegador del dispositivo, que según cuál sea puede enviar el audio a su propio proveedor (por ejemplo, Google en Chrome). Algunos están fuera de Chile, por ejemplo en
         Estados Unidos, por lo que tus datos pueden tratarse en otros países. Les pedimos que usen los datos solo para
         prestarnos el servicio.
       </p>

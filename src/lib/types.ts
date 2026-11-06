@@ -58,10 +58,32 @@ export interface Conversacion {
   transcripcion_completa: ChatMessage[];
 }
 
+/**
+ * Medidas del ritmo del habla de un mensaje dicho en voz alta. Se calculan en
+ * el dispositivo a partir de la energía del micrófono: el audio nunca se
+ * graba ni se envía, solo estos números.
+ */
+export interface MetricasVoz {
+  /** Del primer al último sonido, en ms. */
+  duracionMs: number;
+  /** Tiempo con voz, en ms. */
+  vozMs: number;
+  /** Silencios de 250 ms o más entre sonidos. */
+  pausas: number;
+  /** Silencios de 1 s o más. */
+  pausasLargas: number;
+  /** Suma de todas las pausas, en ms. */
+  pausaTotalMs: number;
+  /** Palabras reconocidas en ese mensaje. */
+  palabras: number;
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: string;
+  /** Solo en mensajes del usuario dichos por voz. */
+  voz?: MetricasVoz;
 }
 
 export interface ClimaInfo {

@@ -82,11 +82,11 @@ async function cargarSesiones(filas: { id: string; fecha: string }[]): Promise<S
     const lote = ultimos.slice(i, i + 100);
     const conversaciones = await getConversacionesPorIds(lote.map((x) => x.id));
     for (const c of conversaciones) {
+      const delUsuario = (c.transcripcion_completa ?? []).filter((m) => m.role === "user");
       sesiones.push({
         fecha: c.fecha,
-        mensajesUsuario: (c.transcripcion_completa ?? [])
-          .filter((m) => m.role === "user")
-          .map((m) => m.content),
+        mensajesUsuario: delUsuario.map((m) => m.content),
+        voz: delUsuario.flatMap((m) => (m.voz ? [m.voz] : [])),
       });
     }
   }

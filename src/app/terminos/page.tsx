@@ -24,7 +24,7 @@ export default function TerminosPage() {
       <h2>2. Griyo no es un servicio médico ni de urgencia</h2>
       <p>
         Griyo no entrega diagnósticos ni tratamientos, y sus señales e informes son orientativos. No reemplaza a un
-        profesional de salud ni a un servicio de urgencia. En una emergencia llama al 131 (SAMU). El botón de ayuda de la
+        profesional de salud ni a un servicio de urgencia. Las señales sobre el lenguaje y el ritmo del habla comparan a la persona con su propio patrón, no están validadas clínicamente y también pueden variar por cansancio, ánimo, ruido o el micrófono. En una emergencia llama al 131 (SAMU). El botón de ayuda de la
         aplicación avisa a la familia, pero no garantiza que alguien responda.
       </p>
 

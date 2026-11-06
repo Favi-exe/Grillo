@@ -98,7 +98,7 @@ function Tarjeta({ valor, etiqueta }: { valor: string; etiqueta: string }) {
 export function InformeSeguimientoDocument({ seg }: { seg: Seguimiento }) {
   const r = seg.resumen;
   const maxMsg = Math.max(1, ...seg.serie.map((p) => p.mensajes));
-  const { aislamiento, memoria } = seg.senales;
+  const { aislamiento, memoria, voz } = seg.senales;
 
   return (
     <Document title={`Informe de seguimiento de ${seg.nombre}`} author="Griyo" language="es">
@@ -143,7 +143,7 @@ export function InformeSeguimientoDocument({ seg }: { seg: Seguimiento }) {
 
         <View style={s.seccion}>
           <Text style={s.h2}>Señales que notó Griyo</Text>
-          {[aislamiento, memoria].map((sen) => (
+          {[aislamiento, memoria, voz].map((sen) => (
             <View key={sen.titulo} style={s.senalCaja} wrap={false}>
               <Text style={s.senalTitulo}>{sen.titulo}</Text>
               <Text style={s.senalMensaje}>{sen.mensaje}</Text>

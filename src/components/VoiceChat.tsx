@@ -4,7 +4,9 @@ import { memo, useEffect, useRef, useState } from "react";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 import { fetchAbuelo } from "@/lib/auth/fetchConAuth";
-import type { ChatMessage } from "@/lib/types";
+import type { ChatMessage, MetricasVoz } from "@/lib/types";
+import { AnalizadorVoz } from "@/lib/voz/analizadorVoz";
+import { contarPalabras } from "@/lib/voz/metricas";
 import { MicIcon, SendIcon } from "@/components/icons";
 import GriyoMascota from "@/components/ilustraciones/GriyoMascota";
 import { ParejaSaludando } from "@/components/ilustraciones/Escenas";
@@ -83,6 +85,15 @@ export default function VoiceChat() {
   const { disponible: ttsDisponible, hablando, hablar } = useSpeechSynthesis("es-419");
 
   const ultimaTranscripcionEnviada = useRef<string>("");
+  // Mide el ritmo del habla (solo números, nunca audio) mientras escucha.
+  const analizadorRef = useRef<AnalizadorVoz | null>(null);
+
+  function iniciarEscucha() {
+    analizadorRef.current?.detener(0);
+    analizadorRef.current = new AnalizadorVoz();
+    void analizadorRef.current.iniciar();
+    iniciar();
+  }
   const ultimoMensajeFueVoz = useRef(false);
 
   useEffect(() => {
@@ -101,10 +112,22 @@ export default function VoiceChat() {
     if (!escuchando && transcripcion && transcripcion !== ultimaTranscripcionEnviada.current) {
       ultimaTranscripcionEnviada.current = transcripcion;
       ultimoMensajeFueVoz.current = true;
-      enviarMensaje(transcripcion);
+      const voz = analizadorRef.current?.detener(contarPalabras(transcripcion)) ?? null;
+      analizadorRef.current = null;
+      enviarMensaje(transcripcion, voz ?? undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [escuchando, transcripcion]);
+
+  // Si dejó de escuchar sin decir nada (cortó o hubo un error), se suelta el micrófono.
+  useEffect(() => {
+    if (!escuchando && !transcripcion && analizadorRef.current) {
+      analizadorRef.current.detener(0);
+      analizadorRef.current = null;
+    }
+  }, [escuchando, transcripcion]);
+
+  useEffect(() => () => { analizadorRef.current?.detener(0); }, []);
 
   useEffect(() => {
     finRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -118,12 +141,12 @@ export default function VoiceChat() {
     const veniaHablando = estadoAnteriorRef.current === "hablando";
     estadoAnteriorRef.current = estado;
     if (veniaHablando && estado === "idle" && ultimoMensajeFueVoz.current && sttDisponible) {
-      iniciar();
+      iniciarEscucha();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estado]);
 
-  async function enviarMensaje(texto: string) {
+  async function enviarMensaje(texto: string, voz?: MetricasVoz) {
     if (!texto.trim()) return;
     setErrorMsg(null);
     setEstado("pensando");
@@ -133,7 +156,7 @@ export default function VoiceChat() {
     // volvía el fetch completo, y en una charla larga quedaba muy raro.
     const historiaConMensaje = [
       ...historia,
-      { role: "user" as const, content: texto, timestamp: new Date().toISOString() },
+      { role: "user" as const, content: texto, timestamp: new Date().toISOString(), ...(voz ? { voz } : {}) },
     ];
     setHistoria(historiaConMensaje);
 
@@ -141,7 +164,7 @@ export default function VoiceChat() {
       const res = await fetchAbuelo("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ historia, mensaje: texto }),
+        body: JSON.stringify({ historia, mensaje: texto, voz }),
       });
       if (!res.ok) throw new Error(`Chat respondió ${res.status}`);
       const data = await res.json();
@@ -196,7 +219,7 @@ export default function VoiceChat() {
       return;
     }
     setErrorMsg(null);
-    iniciar();
+    iniciarEscucha();
   }
 
   function handleEnvioTexto(e: React.FormEvent<HTMLFormElement>) {

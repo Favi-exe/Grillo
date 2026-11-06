@@ -189,7 +189,7 @@ export default function SeguimientoFamilia({ nombrePersona }: { nombrePersona: s
   const max = Math.max(1, ...datos.serie.map((p) => p.mensajes));
   const idx = sel ?? datos.serie.length - 1;
   const punto = datos.serie[idx];
-  const { aislamiento, memoria } = datos.senales;
+  const { aislamiento, memoria, voz } = datos.senales;
 
   return (
     <div className="bg-white rounded-3xl shadow-warm-sm p-5">
@@ -263,6 +263,12 @@ export default function SeguimientoFamilia({ nombrePersona }: { nombrePersona: s
           mensaje={memoria.mensaje}
           indicadores={memoria.indicadores}
           estado={memoria.nivel === "sin_cambios" ? "ok" : memoria.nivel === "cambio" ? "atencion" : "sin_datos"}
+        />
+        <TarjetaSenal
+          titulo={voz.titulo}
+          mensaje={voz.mensaje}
+          indicadores={voz.indicadores}
+          estado={voz.nivel === "sin_cambios" ? "ok" : voz.nivel === "cambio" ? "atencion" : "sin_datos"}
         />
       </div>
       <p className="text-sm text-sand-700 mt-2">{datos.senales.aviso}</p>

@@ -1,4 +1,6 @@
 import { valenciaDe } from "@/lib/emociones";
+import type { MetricasVoz } from "@/lib/types";
+import { ritmoPalabrasMin } from "@/lib/voz/metricas";
 
 /**
  * Señales de aislamiento y de cambio en la memoria, calculadas con los datos
@@ -34,9 +36,20 @@ export interface SenalMemoria {
   suficienteHistoria: boolean;
 }
 
+export type NivelVoz = "sin_datos" | "sin_cambios" | "cambio";
+
+export interface SenalVoz {
+  nivel: NivelVoz;
+  titulo: string;
+  mensaje: string;
+  indicadores: Indicador[];
+  suficienteHistoria: boolean;
+}
+
 export interface Senales {
   aislamiento: SenalAislamiento;
   memoria: SenalMemoria;
+  voz: SenalVoz;
   aviso: string;
 }
 
@@ -146,6 +159,8 @@ export interface SesionCharla {
   /** Fecha (ISO) del último turno de la sesión. */
   fecha: string;
   mensajesUsuario: string[];
+  /** Medidas del ritmo del habla de los mensajes dichos por voz. */
+  voz?: MetricasVoz[];
 }
 
 export interface EntradaMemoria {
@@ -245,6 +260,93 @@ function por100(n: number, total: number): number {
   return total > 0 ? (n / total) * 100 : 0;
 }
 
+/* ------------------------- marcadores del lenguaje ---------------------------- */
+
+const PATRONES_BUSQUEDA_PALABRA: RegExp[] = [
+  /como se llama\b/,
+  /como se dice/,
+  /como es que se llama/,
+  /no me sale (la palabra|el nombre)/,
+  /la cosa esa/,
+];
+const PALABRAS_VAGAS = new Set(["cosa", "cosas", "cosita", "cositas", "aquello"]);
+
+function palabrasDe(texto: string): string[] {
+  return normalizar(texto)
+    .replace(/[^a-z0-9ñ\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+/**
+ * Variedad de vocabulario como promedio de palabras distintas en ventanas
+ * móviles de 50 palabras (no depende de cuánto habló, a diferencia de
+ * "palabras distintas / palabras totales"). 0 a 1; null si hay muy poco texto.
+ */
+export function variedadDeVocabulario(palabras: string[], ventana = 50): number | null {
+  if (palabras.length < ventana * 2) return null;
+  const cuenta = new Map<string, number>();
+  let distintas = 0;
+  let suma = 0;
+  let ventanas = 0;
+  for (let i = 0; i < palabras.length; i++) {
+    const entra = palabras[i];
+    const c = cuenta.get(entra) ?? 0;
+    if (c === 0) distintas++;
+    cuenta.set(entra, c + 1);
+    if (i >= ventana) {
+      const sale = palabras[i - ventana];
+      const cs = (cuenta.get(sale) ?? 1) - 1;
+      cuenta.set(sale, cs);
+      if (cs === 0) distintas--;
+    }
+    if (i >= ventana - 1) {
+      suma += distintas / ventana;
+      ventanas++;
+    }
+  }
+  return suma / ventanas;
+}
+
+export function contarBusquedasDePalabra(mensajes: string[]): number {
+  let n = 0;
+  for (const m of mensajes) {
+    const t = normalizar(m);
+    if (PATRONES_BUSQUEDA_PALABRA.some((p) => p.test(t))) n++;
+  }
+  return n;
+}
+
+export interface PerfilLenguaje {
+  mensajes: number;
+  palabras: number;
+  palabrasPorMensaje: number;
+  variedad: number | null;
+  vagasPor100: number;
+  busquedasPor100Mensajes: number;
+  busquedas: number;
+  vagas: number;
+}
+
+export function perfilDeLenguaje(mensajes: string[]): PerfilLenguaje {
+  const todas = mensajes.flatMap(palabrasDe);
+  const vagas = todas.filter((p) => PALABRAS_VAGAS.has(p)).length;
+  const busquedas = contarBusquedasDePalabra(mensajes);
+  return {
+    mensajes: mensajes.length,
+    palabras: todas.length,
+    palabrasPorMensaje: mensajes.length ? todas.length / mensajes.length : 0,
+    variedad: variedadDeVocabulario(todas),
+    vagasPor100: todas.length ? (vagas / todas.length) * 100 : 0,
+    busquedasPor100Mensajes: mensajes.length ? (busquedas / mensajes.length) * 100 : 0,
+    busquedas,
+    vagas,
+  };
+}
+
+const MIN_PALABRAS_RECIENTES = 150;
+const MIN_PALABRAS_BASE = 300;
+
 export function calcularMemoria(e: EntradaMemoria): SenalMemoria {
   const titulo = "Memoria y conversación";
   const hace14 = e.ahora - 14 * DIA_MS;
@@ -300,6 +402,33 @@ export function calcularMemoria(e: EntradaMemoria): SenalMemoria {
     cambios.push("cuenta de nuevo historias que ya había contado");
   }
 
+  // Marcadores del lenguaje: solo se comparan con texto suficiente en los dos períodos.
+  const lenRec = perfilDeLenguaje(msgRec);
+  const lenBase = perfilDeLenguaje(msgBase);
+  const hayLenguaje = lenRec.palabras >= MIN_PALABRAS_RECIENTES && lenBase.palabras >= MIN_PALABRAS_BASE;
+  if (hayLenguaje) {
+    if (lenRec.variedad !== null && lenBase.variedad !== null && lenBase.variedad - lenRec.variedad >= 0.07) {
+      cambios.push("usa un vocabulario menos variado");
+    }
+    if (
+      lenBase.palabrasPorMensaje >= 8 &&
+      lenRec.palabrasPorMensaje <= lenBase.palabrasPorMensaje * 0.6 &&
+      lenBase.palabrasPorMensaje - lenRec.palabrasPorMensaje >= 4
+    ) {
+      cambios.push("sus mensajes son bastante más cortos que de costumbre");
+    }
+    if (lenRec.vagas >= 3 && lenRec.vagasPor100 >= lenBase.vagasPor100 * 2 && lenRec.vagasPor100 - lenBase.vagasPor100 >= 1) {
+      cambios.push("usa más palabras vagas como \"cosa\"");
+    }
+    if (
+      lenRec.busquedas >= 3 &&
+      lenRec.busquedasPor100Mensajes >= lenBase.busquedasPor100Mensajes * 2 &&
+      lenRec.busquedasPor100Mensajes - lenBase.busquedasPor100Mensajes >= 2
+    ) {
+      cambios.push("le cuesta más encontrar palabras (\"cómo se llama\")");
+    }
+  }
+
   const f = (x: number) => x.toFixed(1).replace(".", ",");
   const indicadores: Indicador[] = [
     {
@@ -312,6 +441,28 @@ export function calcularMemoria(e: EntradaMemoria): SenalMemoria {
     },
     { etiqueta: "Historias que ya había contado", valor: `${histRec} ahora, ${histBase} antes` },
   ];
+  if (hayLenguaje) {
+    if (lenRec.variedad !== null && lenBase.variedad !== null) {
+      indicadores.push({
+        etiqueta: "Variedad de vocabulario (de 100)",
+        valor: `${Math.round(lenRec.variedad * 100)} ahora, ${Math.round(lenBase.variedad * 100)} habitual`,
+      });
+    }
+    indicadores.push(
+      {
+        etiqueta: "Largo de sus mensajes (palabras)",
+        valor: `${f(lenRec.palabrasPorMensaje)} ahora, ${f(lenBase.palabrasPorMensaje)} habitual`,
+      },
+      {
+        etiqueta: "Palabras vagas (cada 100 palabras)",
+        valor: `${f(lenRec.vagasPor100)} ahora, ${f(lenBase.vagasPor100)} habitual`,
+      },
+      {
+        etiqueta: "Dudas para encontrar una palabra (cada 100 mensajes)",
+        valor: `${f(lenRec.busquedasPor100Mensajes)} ahora, ${f(lenBase.busquedasPor100Mensajes)} habitual`,
+      }
+    );
+  }
 
   if (cambios.length === 0) {
     return {
@@ -331,6 +482,113 @@ export function calcularMemoria(e: EntradaMemoria): SenalMemoria {
   };
 }
 
+/* ------------------------------------ voz ------------------------------------- */
+
+const MIN_MEDICIONES_RECIENTES = 8;
+const MIN_MEDICIONES_BASE = 15;
+
+interface Medicion {
+  t: number;
+  v: MetricasVoz;
+}
+
+function resumenDeVoz(ms: Medicion[]) {
+  const minutos = ms.reduce((a, m) => a + m.v.duracionMs, 0) / 60000;
+  const duracion = minutos * 60000;
+  return {
+    ritmo: ms.reduce((a, m) => a + m.v.palabras, 0) / minutos, // palabras por minuto
+    pausas: ms.reduce((a, m) => a + m.v.pausaTotalMs, 0) / duracion, // proporción del tiempo en pausa
+    largasPorMin: ms.reduce((a, m) => a + m.v.pausasLargas, 0) / minutos,
+  };
+}
+
+/**
+ * Ritmo del habla y pausas, comparados con el propio patrón de la persona. Son
+ * medidas descriptivas, NO un test clínico ni un diagnóstico: el cansancio, el
+ * ánimo, el micrófono o el ruido también las mueven. No se le atribuye ninguna
+ * sensibilidad ni especificidad: no se ha validado contra evaluaciones clínicas.
+ */
+export function calcularVoz(e: EntradaMemoria): SenalVoz {
+  const titulo = "Voz y ritmo del habla";
+  const mediciones: Medicion[] = e.sesiones.flatMap((s) =>
+    (s.voz ?? [])
+      .filter((v) => ritmoPalabrasMin(v) !== null)
+      .map((v) => ({ t: new Date(s.fecha).getTime(), v }))
+  );
+
+  if (mediciones.length === 0) {
+    return {
+      nivel: "sin_datos",
+      titulo,
+      mensaje:
+        "Todavía no hay mediciones de voz. Se toman cuando conversa hablando (no escribiendo), desde un computador o un celular o tablet Android.",
+      indicadores: [],
+      suficienteHistoria: false,
+    };
+  }
+
+  const hace14 = e.ahora - 14 * DIA_MS;
+  const recientes = mediciones.filter((m) => m.t >= hace14);
+  const base = mediciones.filter((m) => m.t < hace14);
+  const primera = Math.min(...mediciones.map((m) => m.t));
+  const diasHistoria = Math.floor((e.ahora - primera) / DIA_MS);
+
+  if (
+    diasHistoria < MIN_DIAS_HISTORIA ||
+    recientes.length < MIN_MEDICIONES_RECIENTES ||
+    base.length < MIN_MEDICIONES_BASE
+  ) {
+    return {
+      nivel: "sin_datos",
+      titulo,
+      mensaje:
+        "Todavía no hay suficientes mediciones para compararla con su propio patrón: hacen falta unas 3 semanas de charlas habladas.",
+      indicadores: [],
+      suficienteHistoria: false,
+    };
+  }
+
+  const rec = resumenDeVoz(recientes);
+  const bas = resumenDeVoz(base);
+
+  const cambios: string[] = [];
+  if (rec.ritmo <= bas.ritmo * 0.8 && bas.ritmo - rec.ritmo >= 10) {
+    cambios.push("habla más despacio");
+  }
+  if (
+    rec.pausas - bas.pausas >= 0.08 ||
+    (rec.largasPorMin >= bas.largasPorMin * 1.5 && rec.largasPorMin - bas.largasPorMin >= 0.5)
+  ) {
+    cambios.push("hace pausas más largas o más seguidas");
+  }
+
+  const f = (x: number) => x.toFixed(1).replace(".", ",");
+  const pct = (x: number) => `${Math.round(x * 100)} %`;
+  const indicadores: Indicador[] = [
+    { etiqueta: "Palabras por minuto", valor: `${Math.round(rec.ritmo)} ahora, ${Math.round(bas.ritmo)} habitual` },
+    { etiqueta: "Tiempo en pausa", valor: `${pct(rec.pausas)} ahora, ${pct(bas.pausas)} habitual` },
+    { etiqueta: "Pausas largas (cada minuto)", valor: `${f(rec.largasPorMin)} ahora, ${f(bas.largasPorMin)} habitual` },
+    { etiqueta: "Mensajes medidos", valor: `${recientes.length} ahora, ${base.length} antes` },
+  ];
+
+  if (cambios.length === 0) {
+    return {
+      nivel: "sin_cambios",
+      titulo,
+      mensaje: "En las últimas 2 semanas su forma de hablar se mantiene dentro de su patrón habitual.",
+      indicadores,
+      suficienteHistoria: true,
+    };
+  }
+  return {
+    nivel: "cambio",
+    titulo,
+    mensaje: `En las últimas 2 semanas su forma de hablar cambió respecto de su propio patrón: ${cambios.join("; ")}.`,
+    indicadores,
+    suficienteHistoria: true,
+  };
+}
+
 export function calcularSenales(
   aislamiento: EntradaAislamiento,
   memoria: EntradaMemoria
@@ -338,6 +596,7 @@ export function calcularSenales(
   return {
     aislamiento: calcularAislamiento(aislamiento),
     memoria: calcularMemoria(memoria),
+    voz: calcularVoz(memoria),
     aviso: AVISO_SENALES,
   };
 }

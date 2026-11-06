@@ -3,6 +3,7 @@ import { chatWithGriyo, type ChatResult } from "@/lib/ai/claude";
 import { getAbuelo, createConversacion, contarConversacionesDesde } from "@/lib/db";
 import { AuthError, requireAbueloAccess } from "@/lib/auth/server";
 import { chequearYAvisarAnimo } from "@/lib/animo";
+import { sanitizarMetricasVoz } from "@/lib/voz/metricas";
 import type { ChatMessage } from "@/lib/types";
 
 // Techo de mensajes por persona mayor en una ventana móvil de 24hs — para no
@@ -22,6 +23,8 @@ export async function POST(req: NextRequest) {
     if (!mensaje) {
       return NextResponse.json({ error: "Falta el mensaje" }, { status: 400 });
     }
+    // Medidas del ritmo del habla (solo números): opcionales y validadas.
+    const voz = sanitizarMetricasVoz(body.voz);
 
     const abuelo = await getAbuelo(abueloId);
     if (!abuelo) {
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     const nuevaHistoria: ChatMessage[] = [
       ...(historia ?? []),
-      { role: "user", content: mensaje, timestamp: new Date().toISOString() },
+      { role: "user", content: mensaje, timestamp: new Date().toISOString(), ...(voz ? { voz } : {}) },
       { role: "assistant", content: result.reply, timestamp: new Date().toISOString() },
     ];
 

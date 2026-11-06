@@ -3,6 +3,44 @@
 Registro de la sesión de construcción autónoma. Todos los timestamps son
 aproximados (hora local de la máquina, 2026-08-06).
 
+## Sesión 20 — Señales de lenguaje y de voz (cambios respecto del propio patrón)
+
+Se refuerza la señal "Memoria y conversación" y se suma una nueva, "Voz y ritmo del
+habla". Ambas comparan las últimas 2 semanas con la línea base de la propia persona
+y piden unas 3 semanas de historia; ninguna es un diagnóstico.
+
+- **Lenguaje** (`src/lib/senales.ts`, dentro de `calcularMemoria`): además de olvidos,
+  repeticiones e historias repetidas, ahora mide variedad de vocabulario (ventanas de
+  50 palabras), largo de los mensajes, palabras vagas ("cosa") y dudas para encontrar
+  una palabra ("cómo se llama"). Solo compara con texto suficiente (150 palabras
+  recientes, 300 de base).
+- **Voz** (`calcularVoz`): palabras por minuto, proporción de tiempo en pausa y pausas
+  largas por minuto. La medición se hace en el navegador a partir de la energía del
+  micrófono (`src/lib/voz/analizadorVoz.ts`, lógica pura en `src/lib/voz/metricas.ts`).
+  **El audio no se graba ni se envía: solo viajan 6 números por mensaje**, que el
+  servidor valida (`sanitizarMetricasVoz`) y guarda en el mensaje (`ChatMessage.voz`),
+  sin cambiar el esquema de la base. Si la medición falla, la charla sigue igual.
+- Se muestra como tercera tarjeta en la vista familiar y en el informe PDF.
+- Probado con datos sintéticos (segmentación de audio simulado, cambios detectados,
+  ausencia de falsas alarmas con patrón estable o poca historia). **No probado con
+  audio real**: el navegador de pruebas no tiene micrófono.
+
+Límites que hay que tener presentes:
+- **No existe una sensibilidad ni una especificidad de Griyo.** Esas cifras salen de
+  estudios clínicos con pacientes y no se pueden atribuir a esta función. No usar
+  "detecta deterioro cognitivo con X % de sensibilidad" para Griyo; sí se puede citar
+  la literatura como evidencia del enfoque. Los umbrales son razonables pero no están
+  calibrados con datos clínicos: validarlos con profesionales de salud (ya figura como
+  actividad del programa).
+- Se desactiva en iPhone/iPad (usar el micrófono dos veces puede cortar el
+  reconocimiento de voz). `NEXT_PUBLIC_MEDIR_VOZ=0` la apaga en todos lados.
+- El cansancio, el ánimo, el ruido o el micrófono también mueven estas medidas.
+- Política de privacidad y términos actualizados (6 de noviembre de 2026): teléfono como
+  dato de cuenta, medición del ritmo del habla sin guardar audio, avisos por WhatsApp
+  (Twilio), el reconocimiento de voz del navegador y que las señales no están validadas
+  clínicamente. `VERSION_LEGAL` subió a "2026-11-06": todas las cuentas vuelven a aceptar.
+  Los textos conviene que los revise quien redacta los documentos legales.
+
 ## Sesión 19 — Registro con WhatsApp/teléfono (el correo pasa a ser opcional)
 
 Pedido: que crear la cuenta no obligue a tener correo; entrar con el número de
